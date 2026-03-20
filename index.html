@@ -125,7 +125,7 @@
                         <button type="button" class="input-clear" id="clearEmail">×</button>
                     </div>
                     <div class="input-wrapper" id="passwordWrapper">
-                        <input type="password" class="auth-input" id="authPassword" placeholder="密码（登录用）" autocomplete="current-password" required>
+                        <input type="password" class="auth-input" id="authPassword" placeholder="密码" autocomplete="current-password" required>
                         <button type="button" class="input-clear" id="clearPassword">×</button>
                     </div>
                     <button type="submit" class="auth-btn" id="authBtn">登录</button>
@@ -353,6 +353,8 @@
                     let msg = data.error_description || data.msg || '登录失败';
                     if (msg.toLowerCase().includes('invalid login credentials')) {
                         msg = '邮箱或密码错误';
+                    } else if (msg.toLowerCase().includes('email not confirmed')) {
+                        msg = '请先去邮箱点击确认链接';
                     }
                     showToast(msg);
                     authBtn.disabled = false;
