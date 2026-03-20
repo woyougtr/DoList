@@ -37,9 +37,9 @@
         .input-wrapper { position: relative; }
         .auth-input { width: 100%; padding: 14px 40px 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; }
         .auth-input:focus { border-color: var(--primary); }
-        .input-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border: none; background: #d1d5db; border-radius: 50%; cursor: pointer; font-size: 12px; color: #6b7280; display: none; align-items: center; justify-content: center; }
-        .input-clear:hover { background: #9ca3af; color: #fff; }
-        .input-clear.show { display: flex; }
+        .input-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; font-size: 18px; color: #d1d5db; display: none; padding: 4px; line-height: 1; }
+        .input-clear:hover { color: #9ca3af; }
+        .input-clear.show { display: block; }
         .code-row { display: flex; gap: 10px; }
         .code-row .auth-input { flex: 1; }
         .send-code-btn { padding: 14px 16px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
@@ -252,14 +252,12 @@
         
         clearEmail.addEventListener('click', () => {
             authEmail.value = '';
-            toggleClear(clearEmail, authEmail);
-            authEmail.focus();
+            clearEmail.classList.remove('show');
         });
         
         clearCode.addEventListener('click', () => {
             authCode.value = '';
-            toggleClear(clearCode, authCode);
-            authCode.focus();
+            clearCode.classList.remove('show');
         });
         
         authEmail.addEventListener('input', () => toggleClear(clearEmail, authEmail));
