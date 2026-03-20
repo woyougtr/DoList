@@ -351,10 +351,10 @@
                 
                 if (!res.ok) {
                     let msg = data.error_description || data.msg || '登录失败';
-                    if (msg.toLowerCase().includes('invalid login credentials')) {
-                        msg = '邮箱或密码错误';
-                    } else if (msg.toLowerCase().includes('email not confirmed')) {
+                    if (msg.toLowerCase().includes('email not confirmed')) {
                         msg = '请先去邮箱点击确认链接';
+                    } else if (msg.toLowerCase().includes('invalid login credentials')) {
+                        msg = '请先注册';
                     }
                     showToast(msg);
                     authBtn.disabled = false;
