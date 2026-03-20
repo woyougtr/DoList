@@ -40,10 +40,6 @@
         .input-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; font-size: 18px; color: #d1d5db; display: none; padding: 4px; line-height: 1; }
         .input-clear:hover { color: #9ca3af; }
         .input-clear.show { display: block; }
-        .code-row { display: flex; gap: 10px; align-items: center; }
-        .send-code-btn { padding: 14px 16px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; height: 50px; }
-        .send-code-btn:hover { background: var(--primary); color: #fff; }
-        .send-code-btn:disabled { opacity: 0.6; cursor: not-allowed; border-color: #d1d5db; color: #d1d5db; }
         .auth-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .auth-btn:hover { background: var(--primary-light); }
         .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -129,15 +125,8 @@
                         <button type="button" class="input-clear" id="clearEmail">×</button>
                     </div>
                     <div class="input-wrapper" id="passwordWrapper">
-                        <input type="password" class="auth-input" id="authPassword" placeholder="密码" autocomplete="current-password">
+                        <input type="password" class="auth-input" id="authPassword" placeholder="密码（登录用）" autocomplete="current-password" required>
                         <button type="button" class="input-clear" id="clearPassword">×</button>
-                    </div>
-                    <div class="code-row" id="codeWrapper">
-                        <div class="input-wrapper" style="flex:1">
-                            <input type="text" class="auth-input" id="authCode" placeholder="验证码" maxlength="6" autocomplete="off">
-                            <button type="button" class="input-clear" id="clearCode">×</button>
-                        </div>
-                        <button type="button" class="send-code-btn" id="sendCodeBtn">发送验证码</button>
                     </div>
                     <button type="submit" class="auth-btn" id="authBtn">登录</button>
                 </form>
@@ -211,8 +200,6 @@
         let currentFilter = 'all';
         let currentCategory = 'all';
         let authTab = 'login';
-        let codeSent = false;
-        let countdown = 0;
         let pendingEmail = '';
         let pendingPassword = '';
         
@@ -221,8 +208,6 @@
         const appContent = document.getElementById('appContent');
         const authForm = document.getElementById('authForm');
         const authEmail = document.getElementById('authEmail');
-        const authCode = document.getElementById('authCode');
-        const sendCodeBtn = document.getElementById('sendCodeBtn');
         const authBtn = document.getElementById('authBtn');
         const userEmailEl = document.getElementById('userEmail');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -240,9 +225,6 @@
         const toast = document.getElementById('toast');
         const clearEmail = document.getElementById('clearEmail');
         const clearPassword = document.getElementById('clearPassword');
-        const clearCode = document.getElementById('clearCode');
-        const passwordWrapper = document.getElementById('passwordWrapper');
-        const codeWrapper = document.getElementById('codeWrapper');
         const authPassword = document.getElementById('authPassword');
         
         function showToast(msg) {
@@ -271,14 +253,8 @@
             clearPassword.classList.remove('show');
         });
         
-        clearCode.addEventListener('click', () => {
-            authCode.value = '';
-            clearCode.classList.remove('show');
-        });
-        
         authEmail.addEventListener('input', () => toggleClear(clearEmail, authEmail));
         authPassword.addEventListener('input', () => toggleClear(clearPassword, authPassword));
-        authCode.addEventListener('input', () => toggleClear(clearCode, authCode));
         
         // Auth tabs
         document.querySelectorAll('.auth-tab').forEach(tab => {
@@ -287,91 +263,14 @@
                 tab.classList.add('active');
                 authTab = tab.dataset.tab;
                 authBtn.textContent = authTab === 'login' ? '登录' : '注册';
-                sendCodeBtn.textContent = '发送验证码';
-                sendCodeBtn.disabled = false;
-                sendCodeBtn.classList.remove('hidden');
-                codeSent = false;
-                countdown = 0;
-                authCode.value = '';
-                clearCode.classList.remove('show');
-                // 登录：显示密码，隐藏验证码；注册：显示密码，显示验证码
-                if (authTab === 'login') {
-                    codeWrapper.classList.add('hidden');
-                    sendCodeBtn.classList.add('hidden');
-                } else {
-                    codeWrapper.classList.remove('hidden');
-                    sendCodeBtn.classList.remove('hidden');
-                }
             });
         });
-        
-        // 登录：直接用密码登录
-        // 注册：先发送验证码，验证后完成注册
-        
-        // 发送验证码（仅注册时需要）
-        sendCodeBtn.addEventListener('click', async () => {
-            const email = authEmail.value.trim();
-            if (!email) {
-                showToast('请输入邮箱地址');
-                return;
-            }
-            
-            sendCodeBtn.disabled = true;
-            countdown = 60;
-            updateCountdown();
-            
-            try {
-                // 注册时发送验证码
-                const res = await fetch(API + '/auth/v1/otp', {
-                    method: 'POST',
-                    headers: {
-                        'apikey': KEY,
-                        'Authorization': 'Bearer ' + KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        createUser: true
-                    })
-                });
-                
-                const data = await res.json();
-                
-                if (!res.ok && data.msg !== 'For security purposes, you can only request this once every 60 seconds') {
-                    showToast(data.msg || '发送失败');
-                    sendCodeBtn.disabled = false;
-                    countdown = 0;
-                    sendCodeBtn.textContent = '发送验证码';
-                    return;
-                }
-                
-                showToast('验证码已发送');
-                codeSent = true;
-            } catch (e) {
-                showToast('网络错误');
-                sendCodeBtn.disabled = false;
-                countdown = 0;
-                sendCodeBtn.textContent = '发送验证码';
-            }
-        });
-        
-        function updateCountdown() {
-            if (countdown > 0) {
-                sendCodeBtn.textContent = `${countdown}秒后重发`;
-                countdown--;
-                setTimeout(updateCountdown, 1000);
-            } else {
-                sendCodeBtn.disabled = false;
-                sendCodeBtn.textContent = '发送验证码';
-            }
-        }
         
         // 表单提交
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = authEmail.value.trim();
             const password = authPassword.value;
-            const code = authCode.value.trim();
             
             if (!email) {
                 showToast('请输入邮箱地址');
@@ -386,18 +285,52 @@
                 }
                 await loginWithPassword(email, password);
             } else {
-                // 注册：验证验证码完成注册
-                if (!codeSent) {
-                    showToast('请先发送验证码');
+                // 注册：邮箱 + 密码，发送验证邮件
+                if (!password) {
+                    showToast('请输入密码');
                     return;
                 }
-                if (!code) {
-                    showToast('请输入验证码');
+                if (password.length < 6) {
+                    showToast('密码至少6位');
                     return;
                 }
-                await verifyOtp(email, code, 'signup');
+                await registerWithEmail(email, password);
             }
         });
+        
+        async function registerWithEmail(email, password) {
+            authBtn.disabled = true;
+            authBtn.textContent = '注册中...';
+            
+            try {
+                const res = await fetch(API + '/auth/v1/signup', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': KEY,
+                        'Authorization': 'Bearer ' + KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    showToast(data.msg || data.error_description || '注册失败');
+                    authBtn.disabled = false;
+                    authBtn.textContent = '注册';
+                    return;
+                }
+                
+                showToast('验证邮件已发送，请去邮箱点击确认链接');
+                authBtn.disabled = false;
+                authBtn.textContent = '注册';
+            } catch (e) {
+                showToast('网络错误');
+                authBtn.disabled = false;
+                authBtn.textContent = '注册';
+            }
+        }
         
         async function loginWithPassword(email, password) {
             authBtn.disabled = true;
@@ -441,48 +374,6 @@
             }
         }
         
-        async function verifyOtp(email, code, type) {
-            authBtn.disabled = true;
-            authBtn.textContent = '验证中...';
-            
-            try {
-                const res = await fetch(API + '/auth/v1/verify', {
-                    method: 'POST',
-                    headers: {
-                        'apikey': KEY,
-                        'Authorization': 'Bearer ' + KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        token: code,
-                        type: type
-                    })
-                });
-                
-                const data = await res.json();
-                
-                if (!res.ok) {
-                    showToast(data.msg || '验证失败');
-                    authBtn.disabled = false;
-                    authBtn.textContent = authTab === 'login' ? '登录' : '注册';
-                    return;
-                }
-                
-                user = data.user;
-                localStorage.setItem('supabase_token', data.session.access_token);
-                userEmailEl.textContent = user.email;
-                authContainer.classList.add('hidden');
-                appContent.classList.remove('hidden');
-                showToast(authTab === 'login' ? '登录成功' : '注册成功');
-                fetchTodos();
-            } catch (e) {
-                showToast('验证失败');
-                authBtn.disabled = false;
-                authBtn.textContent = authTab === 'login' ? '登录' : '注册';
-            }
-        }
-        
         // Logout
         logoutBtn.addEventListener('click', () => {
             user = null;
@@ -492,12 +383,8 @@
             appContent.classList.add('hidden');
             authEmail.value = '';
             authPassword.value = '';
-            authCode.value = '';
-            codeSent = false;
-            sendCodeBtn.textContent = '发送验证码';
             clearEmail.classList.remove('show');
             clearPassword.classList.remove('show');
-            clearCode.classList.remove('show');
             showToast('已退出登录');
         });
         
@@ -527,9 +414,6 @@
             }
             authContainer.classList.remove('hidden');
             appContent.classList.add('hidden');
-            // 默认显示登录：密码可见，验证码隐藏
-            codeWrapper.classList.add('hidden');
-            sendCodeBtn.classList.add('hidden');
             toggleClear(clearEmail, authEmail);
             toggleClear(clearPassword, authPassword);
         }
