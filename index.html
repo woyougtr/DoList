@@ -121,7 +121,7 @@
                 </div>
                 <form class="auth-form" id="authForm">
                     <div class="input-wrapper">
-                        <input type="email" class="auth-input" id="authEmail" placeholder="邮箱地址" autocomplete="email">
+                        <input type="text" class="auth-input" id="authEmail" placeholder="邮箱地址" autocomplete="email">
                         <button type="button" class="input-clear" id="clearEmail">×</button>
                     </div>
                     <div class="input-wrapper" id="passwordWrapper">
@@ -273,7 +273,13 @@
             const password = authPassword.value;
             
             if (!email) {
-                showToast('请输入邮箱地址');
+                showToast('请输入邮箱');
+                return;
+            }
+            
+            // 简单邮箱格式验证
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast('请输入正确邮箱格式');
                 return;
             }
             
