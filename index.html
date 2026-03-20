@@ -238,17 +238,18 @@
                     authCard.style.display = 'none';
                     appContent.style.display = 'block';
                     userEmailEl.textContent = session.user.email;
+                    loadingOverlay.style.display = 'none';
                     fetchTodos();
                 } else {
                     authCard.style.display = 'block';
                     appContent.style.display = 'none';
-                    loadingOverlay.classList.add('hidden');
+                    loadingOverlay.style.display = 'none';
                 }
             } catch (e) {
                 // Supabase 连接失败，显示登录界面
                 authCard.style.display = 'block';
                 appContent.style.display = 'none';
-                loadingOverlay.classList.add('hidden');
+                loadingOverlay.style.display = 'none';
             }
         }
         
