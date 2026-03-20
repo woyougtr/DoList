@@ -15,9 +15,6 @@
             --text-secondary: #6b7280;
             --border: #e5e7eb;
             --danger: #ef4444;
-            --warning: #f59e0b;
-            --urgent: #ef4444;
-            --normal: #6b7280;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -29,255 +26,70 @@
             color: var(--text);
             padding: 20px;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 24px;
-            padding: 20px 0;
-        }
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        }
-        .add-form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .add-form input[type="text"] {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 15px;
-            transition: border-color 0.2s;
-            outline: none;
-        }
-        .add-form input[type="text"]:focus {
-            border-color: var(--primary);
-        }
-        .form-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .form-row select, .form-row input[type="date"] {
-            padding: 10px 14px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-size: 14px;
-            background: #fff;
-            cursor: pointer;
-            outline: none;
-        }
-        .form-row select:focus, .form-row input[type="date"]:focus {
-            border-color: var(--primary);
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: var(--primary-light);
-            transform: translateY(-1px);
-        }
-        .filters {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-        .filter-btn {
-            padding: 8px 16px;
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            background: #fff;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .filter-btn.active {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: #fff;
-        }
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            background: rgba(16, 185, 129, 0.08);
-            border-radius: 10px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-        .stats strong {
-            color: var(--primary);
-        }
-        .todo-list {
-            list-style: none;
-        }
-        .todo-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-            transition: all 0.2s;
-        }
-        .todo-item.completed {
-            opacity: 0.6;
-        }
-        .todo-item.completed .todo-text {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-        }
-        .todo-checkbox {
-            width: 22px;
-            height: 22px;
-            border: 2px solid var(--border);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.2s;
-            margin-top: 2px;
-        }
-        .todo-checkbox:hover {
-            border-color: var(--primary);
-        }
-        .todo-item.completed .todo-checkbox {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
-        }
-        .todo-content {
-            flex: 1;
-            min-width: 0;
-        }
-        .todo-text {
-            font-size: 15px;
-            margin-bottom: 6px;
-            word-break: break-word;
-        }
-        .todo-meta {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .tag {
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-        }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 24px; padding: 20px 0; }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .add-form { display: flex; flex-direction: column; gap: 12px; }
+        .add-form input[type="text"] { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        .add-form input[type="text"]:focus { border-color: var(--primary); }
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .form-row select, .form-row input[type="date"] { padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; background: #fff; cursor: pointer; outline: none; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-btn { padding: 8px 16px; border: 2px solid var(--border); border-radius: 20px; background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .filter-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; background: #f3f4f6; padding: 4px; border-radius: 12px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
+        .tab-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .stats { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(16, 185, 129, 0.08); border-radius: 10px; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary); }
+        .stats strong { color: var(--primary); }
+        .sync-status { font-size: 12px; padding: 4px 10px; border-radius: 12px; }
+        .sync-status.synced { background: #d1fae5; color: #065f46; }
+        .sync-status.syncing { background: #fef3c7; color: #92400e; }
+        .sync-status.error { background: #fee2e2; color: #991b1b; }
+        .todo-list { list-style: none; }
+        .todo-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: all 0.2s; }
+        .todo-item.completed { opacity: 0.6; }
+        .todo-item.completed .todo-text { text-decoration: line-through; color: var(--text-secondary); }
+        .todo-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; margin-top: 2px; }
+        .todo-checkbox:hover { border-color: var(--primary); }
+        .todo-item.completed .todo-checkbox { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .todo-content { flex: 1; min-width: 0; }
+        .todo-text { font-size: 15px; margin-bottom: 6px; word-break: break-word; }
+        .todo-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+        .tag { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
         .tag-work { background: #dbeafe; color: #1d4ed8; }
         .tag-life { background: #fce7f3; color: #be185d; }
         .tag-study { background: #fef3c7; color: #b45309; }
         .tag-urgent { background: #fee2e2; color: #dc2626; }
         .tag-normal { background: #f3f4f6; color: #6b7280; }
-        .due-date {
-            padding: 3px 8px;
-            border-radius: 6px;
-            background: #f3f4f6;
-        }
-        .due-date.overdue {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        .todo-actions {
-            display: flex;
-            gap: 6px;
-        }
-        .action-btn {
-            width: 28px;
-            height: 28px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        .action-btn.delete {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        .action-btn.delete:hover {
-            background: #fecaca;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        .empty-state p {
-            font-size: 15px;
-        }
-        .tab-bar {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 16px;
-            background: #f3f4f6;
-            padding: 4px;
-            border-radius: 12px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            background: transparent;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-secondary);
-        }
-        .tab-btn.active {
-            background: #fff;
-            color: var(--primary);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }
+        .due-date { padding: 3px 8px; border-radius: 6px; background: #f3f4f6; }
+        .due-date.overdue { background: #fee2e2; color: #dc2626; }
+        .todo-actions { display: flex; gap: 6px; }
+        .action-btn { width: 28px; height: 28px; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; }
+        .action-btn.delete { background: #fee2e2; color: #dc2626; }
+        .action-btn.delete:hover { background: #fecaca; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .loading-overlay.hidden { display: none; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); padding: 12px 24px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    <div class="toast" id="toast"></div>
     <div class="container">
         <h1>📋 DoList</h1>
         
-        <!-- 添加待办 -->
         <div class="card">
             <form class="add-form" id="addForm">
                 <input type="text" id="todoInput" placeholder="添加新待办..." maxlength="200" autocomplete="off">
@@ -292,26 +104,26 @@
                         <option value="urgent">⚡ 紧急</option>
                     </select>
                     <input type="date" id="dueDateInput">
-                    <button type="submit" class="btn btn-primary">添加</button>
+                    <button type="submit" class="btn btn-primary" id="addBtn">添加</button>
                 </div>
             </form>
         </div>
         
-        <!-- 统计 -->
-        <div class="stats" id="stats">
-            共 <strong id="totalCount">0</strong> 项 · 
-            已完成 <strong id="completedCount">0</strong> 项 · 
-            进行中 <strong id="ongoingCount">0</strong> 项
+        <div class="stats">
+            <div>
+                共 <strong id="totalCount">0</strong> 项 · 
+                已完成 <strong id="completedCount">0</strong> 项 · 
+                进行中 <strong id="ongoingCount">0</strong> 项
+            </div>
+            <span class="sync-status synced" id="syncStatus">已同步</span>
         </div>
         
-        <!-- 筛选 -->
         <div class="filters">
             <button class="filter-btn active" data-filter="all">全部</button>
             <button class="filter-btn" data-filter="ongoing">进行中</button>
             <button class="filter-btn" data-filter="completed">已完成</button>
         </div>
         
-        <!-- 分类 Tab -->
         <div class="tab-bar">
             <button class="tab-btn active" data-category="all">全部</button>
             <button class="tab-btn" data-category="work">🏢 工作</button>
@@ -319,17 +131,24 @@
             <button class="tab-btn" data-category="study">📚 学习</button>
         </div>
         
-        <!-- 待办列表 -->
         <div id="todoList"></div>
     </div>
 
     <script>
-        // 数据
-        let todos = JSON.parse(localStorage.getItem('dolist_todos') || '[]');
+        const API_BASE = 'https://dolist.1109438417.workers.dev';
+        
+        // 获取或生成 Token
+        let token = localStorage.getItem('dolist_token');
+        if (!token) {
+            token = 'user_' + Math.random().toString(36).slice(2) + Date.now();
+            localStorage.setItem('dolist_token', token);
+        }
+
+        let todos = [];
         let currentFilter = 'all';
         let currentCategory = 'all';
+        let isSyncing = false;
 
-        // DOM
         const addForm = document.getElementById('addForm');
         const todoInput = document.getElementById('todoInput');
         const categorySelect = document.getElementById('categorySelect');
@@ -339,52 +158,136 @@
         const totalCount = document.getElementById('totalCount');
         const completedCount = document.getElementById('completedCount');
         const ongoingCount = document.getElementById('ongoingCount');
+        const syncStatus = document.getElementById('syncStatus');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const addBtn = document.getElementById('addBtn');
+        const toast = document.getElementById('toast');
 
-        // 初始化
-        render();
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
 
-        // 添加待办
-        addForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const text = todoInput.value.trim();
-            if (!text) return;
+        function setSyncStatus(status, text) {
+            syncStatus.className = 'sync-status ' + status;
+            syncStatus.textContent = text;
+        }
 
-            const todo = {
-                id: Date.now(),
-                text,
-                category: categorySelect.value,
-                priority: prioritySelect.value,
-                dueDate: dueDateInput.value || null,
-                completed: false,
-                createdAt: new Date().toISOString()
-            };
-
-            todos.unshift(todo);
-            save();
-            render();
-
-            todoInput.value = '';
-            dueDateInput.value = '';
-        });
-
-        // 切换完成状态
-        function toggleComplete(id) {
-            const todo = todos.find(t => t.id === id);
-            if (todo) {
-                todo.completed = !todo.completed;
-                save();
+        async function fetchTodos() {
+            try {
+                setSyncStatus('syncing', '同步中...');
+                const res = await fetch(API_BASE + '/todos', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error('fetch failed');
+                const data = await res.json();
+                todos = Array.isArray(data) ? data.map(t => ({
+                    id: t.id,
+                    text: t.text,
+                    category: t.category,
+                    priority: t.priority,
+                    dueDate: t.due_date,
+                    completed: !!t.completed,
+                    createdAt: t.created_at
+                })) : [];
+                render();
+                setSyncStatus('synced', '已同步');
+            } catch (e) {
+                console.error('Sync error:', e);
+                setSyncStatus('error', '同步失败');
+                // 本地缓存
+                const cached = localStorage.getItem('dolist_todos');
+                if (cached) todos = JSON.parse(cached);
                 render();
             }
         }
 
-        // 删除
-        function deleteTodo(id) {
-            todos = todos.filter(t => t.id !== id);
-            save();
-            render();
+        async function addTodo(text, category, priority, dueDate) {
+            try {
+                const res = await fetch(API_BASE + '/todos', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ text, category, priority, due_date: dueDate || null })
+                });
+                if (!res.ok) throw new Error('add failed');
+                const newTodo = await res.json();
+                todos.unshift({
+                    id: newTodo.id,
+                    text: newTodo.text,
+                    category: newTodo.category,
+                    priority: newTodo.priority,
+                    dueDate: newTodo.due_date,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                });
+                saveLocal();
+                render();
+                showToast('添加成功');
+            } catch (e) {
+                console.error('Add error:', e);
+                showToast('添加失败');
+            }
         }
 
-        // 筛选
+        async function toggleComplete(id) {
+            const todo = todos.find(t => t.id === id);
+            if (!todo) return;
+            const newCompleted = !todo.completed;
+            try {
+                const res = await fetch(API_BASE + '/todos/' + id, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ completed: newCompleted })
+                });
+                if (!res.ok) throw new Error('update failed');
+                todo.completed = newCompleted;
+                saveLocal();
+                render();
+            } catch (e) {
+                console.error('Toggle error:', e);
+                showToast('更新失败');
+            }
+        }
+
+        async function deleteTodo(id) {
+            try {
+                const res = await fetch(API_BASE + '/todos/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error('delete failed');
+                todos = todos.filter(t => t.id !== id);
+                saveLocal();
+                render();
+                showToast('已删除');
+            } catch (e) {
+                console.error('Delete error:', e);
+                showToast('删除失败');
+            }
+        }
+
+        function saveLocal() {
+            localStorage.setItem('dolist_todos', JSON.stringify(todos));
+        }
+
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = todoInput.value.trim();
+            if (!text) return;
+            addBtn.disabled = true;
+            await addTodo(text, categorySelect.value, prioritySelect.value, dueDateInput.value);
+            todoInput.value = '';
+            dueDateInput.value = '';
+            addBtn.disabled = false;
+        });
+
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -394,7 +297,6 @@
             });
         });
 
-        // 分类 Tab
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -404,9 +306,7 @@
             });
         });
 
-        // 渲染
         function render() {
-            // 过滤
             let filtered = todos.filter(t => {
                 if (currentFilter === 'ongoing' && t.completed) return false;
                 if (currentFilter === 'completed' && !t.completed) return false;
@@ -414,12 +314,10 @@
                 return true;
             });
 
-            // 统计
             totalCount.textContent = todos.length;
             completedCount.textContent = todos.filter(t => t.completed).length;
             ongoingCount.textContent = todos.filter(t => !t.completed).length;
 
-            // 列表
             if (filtered.length === 0) {
                 todoList.innerHTML = `
                     <div class="empty-state">
@@ -430,32 +328,25 @@
                 return;
             }
 
-            todoList.innerHTML = filtered.map(todo => {
-                const isOverdue = todo.dueDate && !todo.completed && new Date(todo.dueDate) < new Date(new Date().toDateString());
-                const categoryNames = { work: '工作', life: '生活', study: '学习' };
-                const priorityLabels = { urgent: '⚡ 紧急', normal: '○ 普通' };
+            const categoryNames = { work: '工作', life: '生活', study: '学习' };
+            const priorityLabels = { urgent: '⚡ 紧急', normal: '○ 普通' };
 
+            todoList.innerHTML = filtered.map(todo => {
                 let dueDateStr = '';
                 if (todo.dueDate) {
                     const d = new Date(todo.dueDate);
                     const today = new Date();
                     const tomorrow = new Date(today);
                     tomorrow.setDate(tomorrow.getDate() + 1);
-                    
-                    if (d.toDateString() === today.toDateString()) {
-                        dueDateStr = '今天';
-                    } else if (d.toDateString() === tomorrow.toDateString()) {
-                        dueDateStr = '明天';
-                    } else {
-                        dueDateStr = `${d.getMonth()+1}/${d.getDate()}`;
-                    }
+                    if (d.toDateString() === today.toDateString()) dueDateStr = '今天';
+                    else if (d.toDateString() === tomorrow.toDateString()) dueDateStr = '明天';
+                    else dueDateStr = `${d.getMonth()+1}/${d.getDate()}`;
                 }
+                const isOverdue = todo.dueDate && !todo.completed && new Date(todo.dueDate) < new Date(new Date().toDateString());
 
                 return `
                     <div class="todo-item ${todo.completed ? 'completed' : ''}">
-                        <div class="todo-checkbox" onclick="toggleComplete(${todo.id})">
-                            ${todo.completed ? '✓' : ''}
-                        </div>
+                        <div class="todo-checkbox" onclick="toggleComplete('${todo.id}')">${todo.completed ? '✓' : ''}</div>
                         <div class="todo-content">
                             <div class="todo-text">${escapeHtml(todo.text)}</div>
                             <div class="todo-meta">
@@ -465,24 +356,20 @@
                             </div>
                         </div>
                         <div class="todo-actions">
-                            <button class="action-btn delete" onclick="deleteTodo(${todo.id})">🗑️</button>
+                            <button class="action-btn delete" onclick="deleteTodo('${todo.id}')">🗑️</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // 保存
-        function save() {
-            localStorage.setItem('dolist_todos', JSON.stringify(todos));
-        }
-
-        // HTML 转义
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
+
+        fetchTodos();
     </script>
 </body>
 </html>
