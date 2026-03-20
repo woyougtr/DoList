@@ -285,12 +285,15 @@
                     } else if (msg.toLowerCase().includes('email not confirmed')) {
                         msg = '请先完成邮箱验证';
                     }
+                    showToast(msg);
                     throw new Error(msg);
                 }
                 
                 if (authTab === 'register') {
-                    showAuthMsg('注册成功！请前往邮箱点击验证链接，然后登录', 'success');
-                    document.querySelector('[data-tab="login"]').click();
+                    showToast('注册成功！请前往邮箱点击验证链接');
+                    setTimeout(() => {
+                        document.querySelector('[data-tab="login"]').click();
+                    }, 1500);
                 } else {
                     user = data.user;
                     localStorage.setItem('supabase_token', data.access_token);
@@ -300,7 +303,7 @@
                     fetchTodos();
                 }
             } catch (e) {
-                showAuthMsg(e.message);
+                // 错误已通过toast提示
             } finally {
                 authBtn.disabled = false;
                 authBtn.textContent = authTab === 'login' ? '登录' : '注册';
