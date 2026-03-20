@@ -34,18 +34,20 @@
         .auth-tab { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
         .auth-tab.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
         .auth-form { display: flex; flex-direction: column; gap: 16px; }
+        .input-wrapper { position: relative; }
         .auth-input { width: 100%; padding: 14px 40px 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; }
         .auth-input:focus { border-color: var(--primary); }
-        .input-wrapper { position: relative; }
         .input-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border: none; background: #d1d5db; border-radius: 50%; cursor: pointer; font-size: 12px; color: #6b7280; display: none; align-items: center; justify-content: center; }
         .input-clear:hover { background: #9ca3af; color: #fff; }
         .input-clear.show { display: flex; }
+        .code-row { display: flex; gap: 10px; }
+        .code-row .auth-input { flex: 1; }
+        .send-code-btn { padding: 14px 16px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .send-code-btn:hover { background: var(--primary); color: #fff; }
+        .send-code-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .auth-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .auth-btn:hover { background: var(--primary-light); }
         .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .auth-msg { padding: 12px; border-radius: 8px; font-size: 14px; text-align: center; display: none; }
-        .auth-msg.error { background: #fee2e2; color: #dc2626; display: block; }
-        .auth-msg.success { background: #d1fae5; color: #065f46; display: block; }
         .user-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .user-info { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); }
         .user-email { color: var(--text); font-weight: 500; }
@@ -124,16 +126,16 @@
                 </div>
                 <form class="auth-form" id="authForm">
                     <div class="input-wrapper">
-                        <input type="email" class="auth-input" id="authEmail" placeholder="邮箱地址" required autocomplete="email">
-                        <button type="button" class="input-clear" id="clearEmail" onclick="document.getElementById('authEmail').value='';toggleClearBtn('authEmail')">×</button>
+                        <input type="email" class="auth-input" id="authEmail" placeholder="邮箱地址" autocomplete="email">
+                        <button type="button" class="input-clear" id="clearEmail">×</button>
                     </div>
-                    <div class="input-wrapper">
-                        <input type="password" class="auth-input" id="authPassword" placeholder="密码" required autocomplete="current-password">
-                        <button type="button" class="input-clear" id="clearPassword" onclick="document.getElementById('authPassword').value='';toggleClearBtn('authPassword')">×</button>
+                    <div class="input-wrapper" id="codeWrapper">
+                        <input type="text" class="auth-input" id="authCode" placeholder="验证码" maxlength="6" autocomplete="off">
+                        <button type="button" class="input-clear" id="clearCode">×</button>
                     </div>
+                    <button type="button" class="send-code-btn" id="sendCodeBtn">发送验证码</button>
                     <button type="submit" class="auth-btn" id="authBtn">登录</button>
                 </form>
-                <div class="auth-msg" id="authMsg"></div>
             </div>
         </div>
         
@@ -204,15 +206,17 @@
         let currentFilter = 'all';
         let currentCategory = 'all';
         let authTab = 'login';
+        let codeSent = false;
+        let countdown = 0;
         
         // Elements
         const authContainer = document.getElementById('authContainer');
         const appContent = document.getElementById('appContent');
         const authForm = document.getElementById('authForm');
         const authEmail = document.getElementById('authEmail');
-        const authPassword = document.getElementById('authPassword');
+        const authCode = document.getElementById('authCode');
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
         const authBtn = document.getElementById('authBtn');
-        const authMsg = document.getElementById('authMsg');
         const userEmailEl = document.getElementById('userEmail');
         const logoutBtn = document.getElementById('logoutBtn');
         const addForm = document.getElementById('addForm');
@@ -227,6 +231,8 @@
         const syncStatus = document.getElementById('syncStatus');
         const addBtn = document.getElementById('addBtn');
         const toast = document.getElementById('toast');
+        const clearEmail = document.getElementById('clearEmail');
+        const clearCode = document.getElementById('clearCode');
         
         function showToast(msg) {
             toast.textContent = msg;
@@ -234,29 +240,30 @@
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
         
-        function toggleClearBtn(id) {
-            const input = document.getElementById(id);
-            const clearBtn = document.getElementById('clear' + id.charAt(0).toUpperCase() + id.slice(1));
-            clearBtn.classList.toggle('show', input.value.length > 0);
-        }
-        
-        // 初始化输入框清除按钮
-        document.getElementById('authEmail').addEventListener('input', function() { toggleClearBtn('authEmail'); });
-        document.getElementById('authPassword').addEventListener('input', function() { toggleClearBtn('authPassword'); });
-        
         function setSyncStatus(status, text) {
             syncStatus.className = 'sync-status ' + status;
             syncStatus.textContent = text;
         }
         
-        function showAuthMsg(msg, type = 'error') {
-            authMsg.textContent = msg;
-            authMsg.className = 'auth-msg ' + type;
+        // 清除按钮逻辑
+        function toggleClear(btn, input) {
+            btn.classList.toggle('show', input.value.length > 0);
         }
         
-        function hideAuthMsg() {
-            authMsg.className = 'auth-msg';
-        }
+        clearEmail.addEventListener('click', () => {
+            authEmail.value = '';
+            toggleClear(clearEmail, authEmail);
+            authEmail.focus();
+        });
+        
+        clearCode.addEventListener('click', () => {
+            authCode.value = '';
+            toggleClear(clearCode, authCode);
+            authCode.focus();
+        });
+        
+        authEmail.addEventListener('input', () => toggleClear(clearEmail, authEmail));
+        authCode.addEventListener('input', () => toggleClear(clearCode, authCode));
         
         // Auth tabs
         document.querySelectorAll('.auth-tab').forEach(tab => {
@@ -265,66 +272,128 @@
                 tab.classList.add('active');
                 authTab = tab.dataset.tab;
                 authBtn.textContent = authTab === 'login' ? '登录' : '注册';
-                hideAuthMsg();
+                sendCodeBtn.textContent = '发送验证码';
+                codeSent = false;
+                countdown = 0;
+                authCode.value = '';
+                toggleClear(clearCode, authCode);
             });
         });
         
-        // Auth
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // 发送验证码
+        sendCodeBtn.addEventListener('click', async () => {
             const email = authEmail.value.trim();
-            const password = authPassword.value;
-            
-            if (!email || !password) {
-                showAuthMsg('请填写完整信息');
+            if (!email) {
+                showToast('请输入邮箱地址');
                 return;
             }
             
-            authBtn.disabled = true;
-            authBtn.textContent = authTab === 'login' ? '登录中...' : '注册中...';
-            hideAuthMsg();
+            sendCodeBtn.disabled = true;
+            countdown = 60;
+            updateCountdown();
             
             try {
-                const res = await fetch(API + '/auth/v1/' + (authTab === 'login' ? 'token?grant_type=password' : 'signup'), {
+                const res = await fetch(API + '/auth/v1/otp', {
                     method: 'POST',
                     headers: {
                         'apikey': KEY,
                         'Authorization': 'Bearer ' + KEY,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({
+                        email: email,
+                        createUser: authTab === 'register'
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok && data.msg !== 'For security purposes, you can only request this once every 60 seconds') {
+                    showToast(data.msg || '发送失败');
+                    sendCodeBtn.disabled = false;
+                    countdown = 0;
+                    sendCodeBtn.textContent = '发送验证码';
+                    return;
+                }
+                
+                showToast('验证码已发送');
+                codeSent = true;
+            } catch (e) {
+                showToast('网络错误');
+                sendCodeBtn.disabled = false;
+                countdown = 0;
+                sendCodeBtn.textContent = '发送验证码';
+            }
+        });
+        
+        function updateCountdown() {
+            if (countdown > 0) {
+                sendCodeBtn.textContent = `${countdown}秒后重发`;
+                countdown--;
+                setTimeout(updateCountdown, 1000);
+            } else {
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = '发送验证码';
+            }
+        }
+        
+        // 登录注册
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = authEmail.value.trim();
+            const code = authCode.value.trim();
+            
+            if (!email) {
+                showToast('请输入邮箱地址');
+                return;
+            }
+            
+            if (!codeSent) {
+                showToast('请先发送验证码');
+                return;
+            }
+            
+            if (!code) {
+                showToast('请输入验证码');
+                return;
+            }
+            
+            authBtn.disabled = true;
+            authBtn.textContent = '验证中...';
+            
+            try {
+                const res = await fetch(API + '/auth/v1/verify', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': KEY,
+                        'Authorization': 'Bearer ' + KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        token: code,
+                        type: authTab === 'register' ? 'signup' : 'login'
+                    })
                 });
                 
                 const data = await res.json();
                 
                 if (!res.ok) {
-                    let msg = data.error_description || data.msg || '操作失败';
-                    // 中文提示优化
-                    if (msg.toLowerCase().includes('invalid login credentials') || msg.toLowerCase().includes('wrong password')) {
-                        msg = '密码错误';
-                    } else if (msg.toLowerCase().includes('email not confirmed')) {
-                        msg = '请先完成邮箱验证';
-                    }
-                    showToast(msg);
-                    throw new Error(msg);
+                    showToast(data.msg || '验证失败');
+                    authBtn.disabled = false;
+                    authBtn.textContent = authTab === 'login' ? '登录' : '注册';
+                    return;
                 }
                 
-                if (authTab === 'register') {
-                    showToast('注册成功！请前往邮箱点击验证链接');
-                    setTimeout(() => {
-                        document.querySelector('[data-tab="login"]').click();
-                    }, 1500);
-                } else {
-                    user = data.user;
-                    localStorage.setItem('supabase_token', data.access_token);
-                    userEmailEl.textContent = user.email;
-                    authContainer.classList.add('hidden');
-                    appContent.classList.remove('hidden');
-                    fetchTodos();
-                }
+                user = data.user;
+                localStorage.setItem('supabase_token', data.session.access_token);
+                userEmailEl.textContent = user.email;
+                authContainer.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                showToast('登录成功');
+                fetchTodos();
             } catch (e) {
-                // 错误已通过toast提示
-            } finally {
+                showToast('验证失败');
                 authBtn.disabled = false;
                 authBtn.textContent = authTab === 'login' ? '登录' : '注册';
             }
@@ -335,14 +404,16 @@
             user = null;
             todos = [];
             localStorage.removeItem('supabase_token');
-            appContent.classList.add('hidden');
             authContainer.classList.remove('hidden');
+            appContent.classList.add('hidden');
             authEmail.value = '';
-            authPassword.value = '';
+            authCode.value = '';
+            codeSent = false;
+            sendCodeBtn.textContent = '发送验证码';
             showToast('已退出登录');
         });
         
-        // Auto login if token exists
+        // Auto login
         async function init() {
             const token = localStorage.getItem('supabase_token');
             if (token) {
@@ -368,6 +439,7 @@
             }
             authContainer.classList.remove('hidden');
             appContent.classList.add('hidden');
+            toggleClear(clearEmail, authEmail);
         }
         
         async function api(path, options = {}, token) {
