@@ -37,8 +37,9 @@
         .auth-input { width: 100%; padding: 14px 40px 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; }
         .auth-input:focus { border-color: var(--primary); }
         .input-wrapper { position: relative; }
-        .input-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: none; background: #e5e7eb; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; opacity: 0.7; }
-        .input-clear:hover { opacity: 1; background: #d1d5db; }
+        .input-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border: none; background: #d1d5db; border-radius: 50%; cursor: pointer; font-size: 12px; color: #6b7280; display: none; align-items: center; justify-content: center; }
+        .input-clear:hover { background: #9ca3af; color: #fff; }
+        .input-clear.show { display: flex; }
         .auth-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .auth-btn:hover { background: var(--primary-light); }
         .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -124,11 +125,11 @@
                 <form class="auth-form" id="authForm">
                     <div class="input-wrapper">
                         <input type="email" class="auth-input" id="authEmail" placeholder="邮箱地址" required autocomplete="email">
-                        <button type="button" class="input-clear" onclick="document.getElementById('authEmail').value=''">✕</button>
+                        <button type="button" class="input-clear" id="clearEmail" onclick="document.getElementById('authEmail').value='';toggleClearBtn('authEmail')">×</button>
                     </div>
                     <div class="input-wrapper">
                         <input type="password" class="auth-input" id="authPassword" placeholder="密码" required autocomplete="current-password">
-                        <button type="button" class="input-clear" onclick="document.getElementById('authPassword').value=''">✕</button>
+                        <button type="button" class="input-clear" id="clearPassword" onclick="document.getElementById('authPassword').value='';toggleClearBtn('authPassword')">×</button>
                     </div>
                     <button type="submit" class="auth-btn" id="authBtn">登录</button>
                 </form>
@@ -232,6 +233,16 @@
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
+        
+        function toggleClearBtn(id) {
+            const input = document.getElementById(id);
+            const clearBtn = document.getElementById('clear' + id.charAt(0).toUpperCase() + id.slice(1));
+            clearBtn.classList.toggle('show', input.value.length > 0);
+        }
+        
+        // 初始化输入框清除按钮
+        document.getElementById('authEmail').addEventListener('input', function() { toggleClearBtn('authEmail'); });
+        document.getElementById('authPassword').addEventListener('input', function() { toggleClearBtn('authPassword'); });
         
         function setSyncStatus(status, text) {
             syncStatus.className = 'sync-status ' + status;
