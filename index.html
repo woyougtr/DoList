@@ -286,6 +286,7 @@
                     document.querySelector('[data-tab="login"]').click();
                 } else {
                     user = data.user;
+                    localStorage.setItem('supabase_token', data.access_token);
                     userEmailEl.textContent = user.email;
                     authContainer.classList.add('hidden');
                     appContent.classList.remove('hidden');
