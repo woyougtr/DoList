@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DoList - 待办清单</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -20,36 +21,49 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             background: var(--bg);
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+            background-image: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
             color: var(--text);
             padding: 20px;
         }
         .container { max-width: 600px; margin: 0 auto; }
         h1 { text-align: center; font-size: 28px; font-weight: 700; color: var(--primary); margin-bottom: 24px; padding: 20px 0; }
         .card { background: var(--card-bg); border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        
+        /* Auth Form */
+        .auth-form { display: flex; flex-direction: column; gap: 12px; max-width: 300px; margin: 0 auto; }
+        .auth-form input { padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; outline: none; }
+        .auth-form input:focus { border-color: var(--primary); }
+        .auth-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .auth-tab { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 10px; background: #fff; font-size: 14px; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .auth-tab.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+        .auth-divider { text-align: center; padding: 20px 0; color: var(--text-secondary); font-size: 14px; }
+        
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { background: #f3f4f6; color: var(--text); }
+        
         .add-form { display: flex; flex-direction: column; gap: 12px; }
-        .add-form input[type="text"] { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        .add-form input[type="text"] { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; outline: none; }
         .add-form input[type="text"]:focus { border-color: var(--primary); }
         .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
         .form-row select, .form-row input[type="date"] { padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; background: #fff; cursor: pointer; outline: none; }
-        .btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--primary); color: #fff; }
-        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
         .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
         .filter-btn { padding: 8px 16px; border: 2px solid var(--border); border-radius: 20px; background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s; }
         .filter-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
         .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; background: #f3f4f6; padding: 4px; border-radius: 12px; }
         .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
         .tab-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        
         .stats { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(16, 185, 129, 0.08); border-radius: 10px; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary); }
         .stats strong { color: var(--primary); }
         .sync-status { font-size: 12px; padding: 4px 10px; border-radius: 12px; }
         .sync-status.synced { background: #d1fae5; color: #065f46; }
         .sync-status.syncing { background: #fef3c7; color: #92400e; }
-        .sync-status.error { background: #fee2e2; color: #991b1b; }
+        .sync-status.offline { background: #f3f4f6; color: #6b7280; }
+        
         .todo-list { list-style: none; }
         .todo-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: all 0.2s; }
         .todo-item.completed { opacity: 0.6; }
@@ -74,81 +88,108 @@
         .action-btn.delete:hover { background: #fecaca; }
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
         .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
-        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
         .loading-overlay.hidden { display: none; }
         .spinner { width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); padding: 12px 24px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 14px; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); z-index: 2000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .toast.show { opacity: 1; }
+        .user-info { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: #f3f4f6; border-radius: 10px; margin-bottom: 16px; font-size: 13px; }
+        .user-email { color: var(--text-secondary); }
+        .logout-btn { padding: 6px 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
+        <p style="margin-top:16px;color:var(--text-secondary)">加载中...</p>
     </div>
     <div class="toast" id="toast"></div>
     <div class="container">
         <h1>📋 DoList</h1>
         
-        <div class="card">
-            <form class="add-form" id="addForm">
-                <input type="text" id="todoInput" placeholder="添加新待办..." maxlength="200" autocomplete="off">
-                <div class="form-row">
-                    <select id="categorySelect">
-                        <option value="work">🏢 工作</option>
-                        <option value="life">🏠 生活</option>
-                        <option value="study">📚 学习</option>
-                    </select>
-                    <select id="prioritySelect">
-                        <option value="normal">○ 普通</option>
-                        <option value="urgent">⚡ 紧急</option>
-                    </select>
-                    <input type="date" id="dueDateInput">
-                    <button type="submit" class="btn btn-primary" id="addBtn">添加</button>
-                </div>
-            </form>
-        </div>
-        
-        <div class="stats">
-            <div>
-                共 <strong id="totalCount">0</strong> 项 · 
-                已完成 <strong id="completedCount">0</strong> 项 · 
-                进行中 <strong id="ongoingCount">0</strong> 项
+        <!-- 登录注册区域 -->
+        <div class="card" id="authCard">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">登录</button>
+                <button class="auth-tab" data-tab="register" onclick="switchTab('register')">注册</button>
             </div>
-            <span class="sync-status synced" id="syncStatus">已同步</span>
+            <form class="auth-form" id="authForm">
+                <input type="email" id="emailInput" placeholder="邮箱" required>
+                <input type="password" id="passwordInput" placeholder="密码" required>
+                <button type="submit" class="btn btn-primary" id="authBtn">登录</button>
+            </form>
+            <p id="authMsg" style="text-align:center;color:var(--danger);margin-top:12px;font-size:13px;display:none;"></p>
         </div>
         
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">全部</button>
-            <button class="filter-btn" data-filter="ongoing">进行中</button>
-            <button class="filter-btn" data-filter="completed">已完成</button>
+        <!-- 已登录状态 -->
+        <div id="appContent" style="display:none;">
+            <div class="user-info">
+                <span class="user-email" id="userEmail"></span>
+                <button class="logout-btn" onclick="logout()">退出登录</button>
+            </div>
+            
+            <div class="card">
+                <form class="add-form" id="addForm">
+                    <input type="text" id="todoInput" placeholder="添加新待办..." maxlength="200" autocomplete="off">
+                    <div class="form-row">
+                        <select id="categorySelect">
+                            <option value="work">🏢 工作</option>
+                            <option value="life">🏠 生活</option>
+                            <option value="study">📚 学习</option>
+                        </select>
+                        <select id="prioritySelect">
+                            <option value="normal">○ 普通</option>
+                            <option value="urgent">⚡ 紧急</option>
+                        </select>
+                        <input type="date" id="dueDateInput">
+                        <button type="submit" class="btn btn-primary" id="addBtn">添加</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="stats">
+                <div>
+                    共 <strong id="totalCount">0</strong> 项 · 已完成 <strong id="completedCount">0</strong> 项 · 进行中 <strong id="ongoingCount">0</strong> 项
+                </div>
+                <span class="sync-status synced" id="syncStatus">已同步</span>
+            </div>
+            
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="ongoing">进行中</button>
+                <button class="filter-btn" data-filter="completed">已完成</button>
+            </div>
+            
+            <div class="tab-bar">
+                <button class="tab-btn active" data-category="all">全部</button>
+                <button class="tab-btn" data-category="work">🏢 工作</button>
+                <button class="tab-btn" data-category="life">🏠 生活</button>
+                <button class="tab-btn" data-category="study">📚 学习</button>
+            </div>
+            
+            <div id="todoList"></div>
         </div>
-        
-        <div class="tab-bar">
-            <button class="tab-btn active" data-category="all">全部</button>
-            <button class="tab-btn" data-category="work">🏢 工作</button>
-            <button class="tab-btn" data-category="life">🏠 生活</button>
-            <button class="tab-btn" data-category="study">📚 学习</button>
-        </div>
-        
-        <div id="todoList"></div>
     </div>
 
     <script>
-        const API_BASE = 'https://dolist.1109438417.workers.dev';
+        const SUPABASE_URL = 'https://cbsjlqnfwqtbydubcrpj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNic2pscW5md3F0YnlkdWJjcnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTQ4ODUsImV4cCI6MjA4OTU5MDg4NX0.AZZCotXt-EZP3hl1RoW_PUjWPfcnmdbAvYIxtFN7h2Q';
         
-        // 获取或生成 Token
-        let token = localStorage.getItem('dolist_token');
-        if (!token) {
-            token = 'user_' + Math.random().toString(36).slice(2) + Date.now();
-            localStorage.setItem('dolist_token', token);
-        }
-
+        const { createClient } = supabaseJs;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         let todos = [];
         let currentFilter = 'all';
         let currentCategory = 'all';
-        let isSyncing = false;
-
+        let authTab = 'login';
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const authCard = document.getElementById('authCard');
+        const appContent = document.getElementById('appContent');
+        const authForm = document.getElementById('authForm');
+        const authBtn = document.getElementById('authBtn');
+        const authMsg = document.getElementById('authMsg');
         const addForm = document.getElementById('addForm');
         const todoInput = document.getElementById('todoInput');
         const categorySelect = document.getElementById('categorySelect');
@@ -159,71 +200,77 @@
         const completedCount = document.getElementById('completedCount');
         const ongoingCount = document.getElementById('ongoingCount');
         const syncStatus = document.getElementById('syncStatus');
-        const loadingOverlay = document.getElementById('loadingOverlay');
         const addBtn = document.getElementById('addBtn');
+        const userEmailEl = document.getElementById('userEmail');
         const toast = document.getElementById('toast');
-
+        
         function showToast(msg) {
             toast.textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2000);
         }
-
+        
         function setSyncStatus(status, text) {
             syncStatus.className = 'sync-status ' + status;
             syncStatus.textContent = text;
         }
-
+        
+        function switchTab(tab) {
+            authTab = tab;
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            authBtn.textContent = tab === 'login' ? '登录' : '注册';
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                authCard.style.display = 'none';
+                appContent.style.display = 'block';
+                userEmailEl.textContent = session.user.email;
+                fetchTodos();
+            } else {
+                authCard.style.display = 'block';
+                appContent.style.display = 'none';
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+        
         async function fetchTodos() {
             try {
                 setSyncStatus('syncing', '同步中...');
-                const res = await fetch(API_BASE + '/todos', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (!res.ok) throw new Error('fetch failed');
-                const data = await res.json();
-                todos = Array.isArray(data) ? data.map(t => ({
-                    id: t.id,
-                    text: t.text,
-                    category: t.category,
-                    priority: t.priority,
-                    dueDate: t.due_date,
-                    completed: !!t.completed,
-                    createdAt: t.created_at
-                })) : [];
+                const { data, error } = await supabase
+                    .from('todos')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                todos = data || [];
                 render();
                 setSyncStatus('synced', '已同步');
             } catch (e) {
-                console.error('Sync error:', e);
-                setSyncStatus('error', '同步失败');
-                // 本地缓存
+                console.error('Fetch error:', e);
+                setSyncStatus('offline', '离线模式');
+                // 离线缓存
                 const cached = localStorage.getItem('dolist_todos');
                 if (cached) todos = JSON.parse(cached);
                 render();
             }
         }
-
+        
         async function addTodo(text, category, priority, dueDate) {
             try {
-                const res = await fetch(API_BASE + '/todos', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ text, category, priority, due_date: dueDate || null })
-                });
-                if (!res.ok) throw new Error('add failed');
-                const newTodo = await res.json();
-                todos.unshift({
-                    id: newTodo.id,
-                    text: newTodo.text,
-                    category: newTodo.category,
-                    priority: newTodo.priority,
-                    dueDate: newTodo.due_date,
-                    completed: false,
-                    createdAt: new Date().toISOString()
-                });
+                const { data, error } = await supabase
+                    .from('todos')
+                    .insert({ text, category, priority, due_date: dueDate || null })
+                    .select()
+                    .single();
+                if (error) throw error;
+                todos.unshift(data);
                 saveLocal();
                 render();
                 showToast('添加成功');
@@ -232,21 +279,17 @@
                 showToast('添加失败');
             }
         }
-
+        
         async function toggleComplete(id) {
             const todo = todos.find(t => t.id === id);
             if (!todo) return;
             const newCompleted = !todo.completed;
             try {
-                const res = await fetch(API_BASE + '/todos/' + id, {
-                    method: 'PUT',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ completed: newCompleted })
-                });
-                if (!res.ok) throw new Error('update failed');
+                const { error } = await supabase
+                    .from('todos')
+                    .update({ completed: newCompleted })
+                    .eq('id', id);
+                if (error) throw error;
                 todo.completed = newCompleted;
                 saveLocal();
                 render();
@@ -255,14 +298,11 @@
                 showToast('更新失败');
             }
         }
-
+        
         async function deleteTodo(id) {
             try {
-                const res = await fetch(API_BASE + '/todos/' + id, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                if (!res.ok) throw new Error('delete failed');
+                const { error } = await supabase.from('todos').delete().eq('id', id);
+                if (error) throw error;
                 todos = todos.filter(t => t.id !== id);
                 saveLocal();
                 render();
@@ -272,11 +312,37 @@
                 showToast('删除失败');
             }
         }
-
+        
         function saveLocal() {
             localStorage.setItem('dolist_todos', JSON.stringify(todos));
         }
-
+        
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            authMsg.style.display = 'none';
+            authBtn.disabled = true;
+            authBtn.textContent = authTab === 'login' ? '登录中...' : '注册中...';
+            
+            try {
+                if (authTab === 'login') {
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabase.auth.signUp({ email, password });
+                    if (error) throw error;
+                    showToast('注册成功！请查收验证邮件');
+                }
+                await checkAuth();
+            } catch (e) {
+                authMsg.textContent = e.message;
+                authMsg.style.display = 'block';
+            }
+            authBtn.disabled = false;
+            authBtn.textContent = authTab === 'login' ? '登录' : '注册';
+        });
+        
         addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const text = todoInput.value.trim();
@@ -287,7 +353,7 @@
             dueDateInput.value = '';
             addBtn.disabled = false;
         });
-
+        
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -296,7 +362,7 @@
                 render();
             });
         });
-
+        
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -305,7 +371,12 @@
                 render();
             });
         });
-
+        
+        async function logout() {
+            await supabase.auth.signOut();
+            checkAuth();
+        }
+        
         function render() {
             let filtered = todos.filter(t => {
                 if (currentFilter === 'ongoing' && t.completed) return false;
@@ -313,28 +384,23 @@
                 if (currentCategory !== 'all' && t.category !== currentCategory) return false;
                 return true;
             });
-
+            
             totalCount.textContent = todos.length;
             completedCount.textContent = todos.filter(t => t.completed).length;
             ongoingCount.textContent = todos.filter(t => !t.completed).length;
-
+            
             if (filtered.length === 0) {
-                todoList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">📝</div>
-                        <p>${todos.length === 0 ? '暂无待办，添加一个吧' : '没有符合条件的待办'}</p>
-                    </div>
-                `;
+                todoList.innerHTML = '<div class="empty-state"><div class="icon">📝</div><p>' + (todos.length === 0 ? '暂无待办，添加一个吧' : '没有符合条件的待办') + '</p></div>';
                 return;
             }
-
+            
             const categoryNames = { work: '工作', life: '生活', study: '学习' };
             const priorityLabels = { urgent: '⚡ 紧急', normal: '○ 普通' };
-
+            
             todoList.innerHTML = filtered.map(todo => {
                 let dueDateStr = '';
-                if (todo.dueDate) {
-                    const d = new Date(todo.dueDate);
+                if (todo.due_date) {
+                    const d = new Date(todo.due_date);
                     const today = new Date();
                     const tomorrow = new Date(today);
                     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -342,34 +408,26 @@
                     else if (d.toDateString() === tomorrow.toDateString()) dueDateStr = '明天';
                     else dueDateStr = `${d.getMonth()+1}/${d.getDate()}`;
                 }
-                const isOverdue = todo.dueDate && !todo.completed && new Date(todo.dueDate) < new Date(new Date().toDateString());
-
-                return `
-                    <div class="todo-item ${todo.completed ? 'completed' : ''}">
-                        <div class="todo-checkbox" onclick="toggleComplete('${todo.id}')">${todo.completed ? '✓' : ''}</div>
-                        <div class="todo-content">
-                            <div class="todo-text">${escapeHtml(todo.text)}</div>
-                            <div class="todo-meta">
-                                <span class="tag tag-${todo.category}">${categoryNames[todo.category]}</span>
-                                <span class="tag tag-${todo.priority}">${priorityLabels[todo.priority]}</span>
-                                ${dueDateStr ? `<span class="due-date ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ ' : ''}${dueDateStr}</span>` : ''}
-                            </div>
-                        </div>
-                        <div class="todo-actions">
-                            <button class="action-btn delete" onclick="deleteTodo('${todo.id}')">🗑️</button>
+                const isOverdue = todo.due_date && !todo.completed && new Date(todo.due_date) < new Date(new Date().toDateString());
+                
+                return `<div class="todo-item ${todo.completed ? 'completed' : ''}">
+                    <div class="todo-checkbox" onclick="toggleComplete('${todo.id}')">${todo.completed ? '✓' : ''}</div>
+                    <div class="todo-content">
+                        <div class="todo-text">${escapeHtml(todo.text)}</div>
+                        <div class="todo-meta">
+                            <span class="tag tag-${todo.category}">${categoryNames[todo.category]}</span>
+                            <span class="tag tag-${todo.priority}">${priorityLabels[todo.priority]}</span>
+                            ${dueDateStr ? `<span class="due-date ${isOverdue ? 'overdue' : ''}">${isOverdue ? '⚠️ ' : ''}${dueDateStr}</span>` : ''}
                         </div>
                     </div>
-                `;
+                    <div class="todo-actions">
+                        <button class="action-btn delete" onclick="deleteTodo('${todo.id}')">🗑️</button>
+                    </div>
+                </div>`;
             }).join('');
         }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        fetchTodos();
+        
+        checkAuth();
     </script>
 </body>
 </html>
