@@ -40,11 +40,10 @@
         .input-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: none; background: transparent; cursor: pointer; font-size: 18px; color: #d1d5db; display: none; padding: 4px; line-height: 1; }
         .input-clear:hover { color: #9ca3af; }
         .input-clear.show { display: block; }
-        .code-row { display: flex; gap: 10px; }
-        .code-row .auth-input { flex: 1; }
-        .send-code-btn { padding: 14px 16px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .code-row { display: flex; gap: 10px; align-items: center; }
+        .send-code-btn { padding: 14px 16px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; height: 50px; }
         .send-code-btn:hover { background: var(--primary); color: #fff; }
-        .send-code-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .send-code-btn:disabled { opacity: 0.6; cursor: not-allowed; border-color: #d1d5db; color: #d1d5db; }
         .auth-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .auth-btn:hover { background: var(--primary-light); }
         .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -133,11 +132,13 @@
                         <input type="password" class="auth-input" id="authPassword" placeholder="密码" autocomplete="current-password">
                         <button type="button" class="input-clear" id="clearPassword">×</button>
                     </div>
-                    <div class="input-wrapper" id="codeWrapper">
-                        <input type="text" class="auth-input" id="authCode" placeholder="验证码" maxlength="6" autocomplete="off">
-                        <button type="button" class="input-clear" id="clearCode">×</button>
+                    <div class="code-row" id="codeWrapper">
+                        <div class="input-wrapper" style="flex:1">
+                            <input type="text" class="auth-input" id="authCode" placeholder="验证码" maxlength="6" autocomplete="off">
+                            <button type="button" class="input-clear" id="clearCode">×</button>
+                        </div>
+                        <button type="button" class="send-code-btn" id="sendCodeBtn">发送验证码</button>
                     </div>
-                    <button type="button" class="send-code-btn" id="sendCodeBtn">发送验证码</button>
                     <button type="submit" class="auth-btn" id="authBtn">登录</button>
                 </form>
             </div>
@@ -287,6 +288,7 @@
                 authTab = tab.dataset.tab;
                 authBtn.textContent = authTab === 'login' ? '登录' : '注册';
                 sendCodeBtn.textContent = '发送验证码';
+                sendCodeBtn.disabled = false;
                 sendCodeBtn.classList.remove('hidden');
                 codeSent = false;
                 countdown = 0;
