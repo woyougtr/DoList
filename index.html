@@ -1260,7 +1260,7 @@
                     (dueDateStr ? '<span class="due-date ' + (isOverdue ? 'overdue' : '') + '">' + (isOverdue ? '⚠️ ' : '') + dueDateStr + '</span>' : '') +
                     (remindStr ? '<span class="due-date remind">' + remindStr + '</span>' : '') +
                     '</div></div>' +
-                    '<div class="todo-actions"><button class="action-btn delete" onclick="deleteTodo(\'' + todo.id + '\')">🗑️</button></div>' +
+                    '<div class="todo-actions"><button class="action-btn remind" onclick="openTodoReminder(\'' + todo.id + '\')">🔔</button><button class="action-btn delete" onclick="deleteTodo(\'' + todo.id + '\')">🗑️</button></div>' +
                     '</div>';
             }).join('');
         }
