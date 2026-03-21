@@ -1,12 +1,11 @@
 // Cloudflare Worker - 待办提醒定时检查
-// 每小时运行一次，检查需要提醒的待办并发送 QQ 通知
+// 每小时运行一次，检查需要提醒的待办并发送微信通知
 
 const SUPABASE_URL = 'https://cbsjlqnfwqtbydubcrpj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNic2pscW5md3F0YnlkdWJjcnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTQ4ODUsImV4cCI6MjA4OTU5MDg4NX0.AZZCotXt-EZP3hl1RoW_PUjWPfcnmdbAvYIxtFN7h2Q';
 
-// OpenClaw API 配置
-const OPENCLAW_URL = 'http://localhost:18789';  // 本地 OpenClaw 地址
-const QQ_OPENID = 'D1F392591BD860B931F5CCD67AA14A19';  // 用户的 QQ OpenID
+// Server酱 SendKey
+const SERVERCHAN_SENDKEY = 'SCT55397TvpML7TBezgh8rw61OJzlTcsB';
 
 // 添加 CORS 头
 const corsHeaders = {
@@ -42,10 +41,9 @@ async function supabaseUpdate(table, id, data) {
   return response.ok;
 }
 
-// 创建 OpenClaw cron 任务
-async function createOpenClawReminder(todo) {
+// 通过 Server酱 发送微信推送
+async function sendServerChanPush(todo) {
   const remindAt = new Date(todo.remind_at);
-  const atMs = remindAt.getTime();
   
   // 计算剩余时间用于消息
   const now = new Date();
@@ -57,43 +55,29 @@ async function createOpenClawReminder(todo) {
   if (diffHours >= 1) timeStr = `${diffHours}小时${diffMins > 0 ? diffMins + '分钟' : ''}`;
   else timeStr = `${diffMins}分钟`;
   
-  const message = `📋 待办提醒：「${todo.text}」${timeStr}后到期！`;
-  
-  const cronJob = {
-    action: 'add',
-    job: {
-      name: `待办提醒-${todo.id.slice(0, 8)}`,
-      schedule: { kind: 'at', atMs: atMs },
-      sessionTarget: 'isolated',
-      wakeMode: 'now',
-      deleteAfterRun: true,
-      payload: {
-        kind: 'agentTurn',
-        message: message,
-        deliver: true,
-        channel: 'qqbot',
-        to: QQ_OPENID
-      }
-    }
-  };
+  const title = '📋 待办提醒';
+  const content = `「${todo.text}」\n\n⏰ 剩余时间：${timeStr}\n🏷️ 分类：${todo.category === 'work' ? '工作' : todo.category === 'life' ? '生活' : '学习'}\n📌 优先级：${todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通'}`;
   
   try {
-    // 通过 OpenClaw 本地 API 创建 cron
-    const response = await fetch(`${OPENCLAW_URL}/api/cron/add`, {
+    const response = await fetch(`https://sctapi.ftqq.com/${SERVERCHAN_SENDKEY}.send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(cronJob)
+      body: JSON.stringify({
+        title: title,
+        content: content,
+        channel: 'wechat'
+      })
     });
     
     if (response.ok) {
-      console.log(`已创建提醒: ${todo.id}`);
+      console.log(`已推送提醒: ${todo.id}`);
       return true;
     } else {
-      console.error(`创建提醒失败: ${response.status}`);
+      console.error(`推送失败: ${response.status}`);
       return false;
     }
   } catch (e) {
-    console.error(`创建提醒异常: ${e.message}`);
+    console.error(`推送异常: ${e.message}`);
     return false;
   }
 }
@@ -120,7 +104,7 @@ export default {
       console.log(`找到 ${todos.length} 个待办需要提醒`);
       
       for (const todo of todos) {
-        const success = await createOpenClawReminder(todo);
+        const success = await sendServerChanPush(todo);
         if (success) {
           // 标记为已通知
           await supabaseUpdate('todos', todo.id, { notified: true });
