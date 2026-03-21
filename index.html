@@ -317,6 +317,8 @@
         .todo-actions { display: flex; gap: 4px; }
         .action-btn { width: 30px; height: 30px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; }
         .action-btn.delete { background: #fee2e2; color: #dc2626; }
+        .action-btn.remind { background: #fef3c7; color: #d97706; }
+        .action-btn.remind:hover { background: #fde68a; }
         .action-btn.delete:hover { background: #fecaca; transform: scale(1.1); }
         
         /* Empty State */
@@ -391,6 +393,111 @@
             .todo-item { padding: 14px; }
             .todo-text { font-size: 14px; }
             .nav-inner { max-width: 100%; }
+        }
+
+        /* Reminder Modal */
+        .reminder-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .reminder-modal.show { display: flex; }
+        .reminder-modal-content {
+            background: #fff;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 320px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .reminder-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 600;
+        }
+        .reminder-modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .reminder-modal-body { padding: 16px 20px; }
+        .reminder-date-picker { margin-bottom: 16px; }
+        .cal-mini-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .cal-mini-nav {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .cal-mini-month { font-size: 13px; font-weight: 600; }
+        .cal-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .cal-mini-day {
+            aspect-ratio: 1;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .cal-mini-day:hover { background: #e5e7eb; }
+        .cal-mini-day.selected { background: var(--primary); color: #fff; }
+        .cal-mini-day.other-month { color: #d1d5db; }
+        .cal-mini-day-header { background: transparent; font-size: 10px; cursor: default; }
+        .cal-mini-day-header:hover { background: transparent; }
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .time-btn {
+            padding: 12px 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .time-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .time-btn.selected { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .reminder-modal-footer { padding: 12px 20px 16px; }
+        .reminder-confirm-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -1164,7 +1271,192 @@
             return div.innerHTML;
         }
         
+
+        // Reminder Modal
+        let currentTodoForRemind = null;
+        let remindCalYear = new Date().getFullYear();
+        let remindCalMonth = new Date().getMonth();
+        let remindSelectedDate = null;
+        let remindSelectedHour = 15;
+        
+        function openTodoReminder(todoId) {
+            currentTodoForRemind = todoId;
+            const todo = todos.find(t => t.id === todoId);
+            // Reset to current month
+            remindCalYear = new Date().getFullYear();
+            remindCalMonth = new Date().getMonth();
+            remindSelectedDate = null;
+            remindSelectedHour = 15;
+            
+            // Pre-fill from existing remind_at
+            if (todo && todo.remind_at) {
+                const parts = todo.remind_at.split(/[- :]/);
+                if (parts.length >= 3) {
+                    remindCalYear = parseInt(parts[0]);
+                    remindCalMonth = parseInt(parts[1]) - 1;
+                    remindSelectedDate = parts[0] + '-' + parts[1] + '-' + parts[2];
+                    if (parts[3]) remindSelectedHour = parseInt(parts[3]);
+                }
+            }
+            
+            renderRemindCalendar();
+            document.getElementById('reminderModal').classList.add('show');
+        }
+        
+        function renderRemindCalendar() {
+            const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            const weekdays = ['日','一','二','三','四','五','六'];
+            
+            document.getElementById('remindCalMonth').textContent = remindCalYear + '年' + months[remindCalMonth];
+            
+            let html = '';
+            weekdays.forEach(d => {
+                html += '<button class="cal-mini-day cal-mini-day-header">' + d + '</button>';
+            });
+            
+            const firstDay = new Date(remindCalYear, remindCalMonth, 1).getDay();
+            const daysInMonth = new Date(remindCalYear, remindCalMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(remindCalYear, remindCalMonth, 0).getDate();
+            
+            for (let i = 0; i < firstDay; i++) {
+                const day = prevMonthDays - firstDay + i + 1;
+                html += '<button class="cal-mini-day other-month" data-day="' + day + '" data-month="prev">' + day + '</button>';
+            }
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = remindCalYear + '-' + String(remindCalMonth + 1).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+                let cls = 'cal-mini-day';
+                if (dateStr === remindSelectedDate) cls += ' selected';
+                html += '<button class="' + cls + '" data-day="' + i + '" data-month="current">' + i + '</button>';
+            }
+            
+            const totalCells = firstDay + daysInMonth;
+            const remaining = 42 - totalCells;
+            for (let i = 1; i <= remaining; i++) {
+                html += '<button class="cal-mini-day other-month" data-day="' + i + '" data-month="next">' + i + '</button>';
+            }
+            
+            document.getElementById('remindCalGrid').innerHTML = html;
+            
+            // Update time buttons
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                if (parseInt(btn.dataset.hour) === remindSelectedHour) {
+                    btn.classList.add('selected');
+                }
+            });
+            
+            // Bind events
+            document.getElementById('remindCalPrev').onclick = () => {
+                remindCalMonth--;
+                if (remindCalMonth < 0) { remindCalMonth = 11; remindCalYear--; }
+                renderRemindCalendar();
+            };
+            document.getElementById('remindCalNext').onclick = () => {
+                remindCalMonth++;
+                if (remindCalMonth > 11) { remindCalMonth = 0; remindCalYear++; }
+                renderRemindCalendar();
+            };
+            
+            document.querySelectorAll('.cal-mini-day:not(.cal-mini-day-header)').forEach(btn => {
+                btn.onclick = () => {
+                    const day = btn.dataset.day;
+                    const monthType = btn.dataset.month;
+                    let month = remindCalMonth;
+                    let year = remindCalYear;
+                    if (monthType === 'prev') { month--; if (month < 0) { month = 11; year--; } }
+                    if (monthType === 'next') { month++; if (month > 11) { month = 0; year++; } }
+                    remindSelectedDate = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+                    renderRemindCalendar();
+                };
+            });
+            
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    remindSelectedHour = parseInt(btn.dataset.hour);
+                };
+            });
+        }
+        
+        document.getElementById('reminderModalClose').onclick = () => {
+            document.getElementById('reminderModal').classList.remove('show');
+        };
+        
+        document.getElementById('reminderModal').onclick = (e) => {
+            if (e.target.id === 'reminderModal') {
+                document.getElementById('reminderModal').classList.remove('show');
+            }
+        };
+        
+        document.getElementById('remindConfirmBtn').onclick = async () => {
+            if (!remindSelectedDate) {
+                showToast('请选择日期');
+                return;
+            }
+            
+            if (currentTodoForRemind) {
+                const remindAt = remindSelectedDate + ' ' + String(remindSelectedHour).padStart(2, '0') + ':00:00';
+                await updateTodoRemind(currentTodoForRemind, remindAt);
+            }
+            
+            document.getElementById('reminderModal').classList.remove('show');
+        };
+        
+        async function updateTodoRemind(todoId, remindAt) {
+            const token = localStorage.getItem('supabase_token');
+            const res = await fetch(API + '/rest/v1/todos?id=eq.' + todoId, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': KEY,
+                    'Authorization': 'Bearer ' + token,
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ remind_at: remindAt, notified: false })
+            });
+            if (res.ok) {
+                const todo = todos.find(t => t.id === todoId);
+                if (todo) {
+                    todo.remind_at = remindAt;
+                    todo.notified = false;
+                }
+                render();
+                showToast('提醒已设置');
+            }
+        }
+
         init();
     </script>
+
+    <!-- 提醒弹窗 -->
+    <div class="reminder-modal" id="reminderModal">
+        <div class="reminder-modal-content">
+            <div class="reminder-modal-header">
+                <span>设置提醒</span>
+                <button class="reminder-modal-close" id="reminderModalClose">×</button>
+            </div>
+            <div class="reminder-modal-body">
+                <div class="reminder-date-picker">
+                    <div class="cal-mini-header">
+                        <button class="cal-mini-nav" id="remindCalPrev">‹</button>
+                        <span class="cal-mini-month" id="remindCalMonth"></span>
+                        <button class="cal-mini-nav" id="remindCalNext">›</button>
+                    </div>
+                    <div class="cal-mini-grid" id="remindCalGrid"></div>
+                </div>
+                <div class="time-grid" id="remindTimeGrid">
+                    <button class="time-btn" data-hour="09">09:00</button>
+                    <button class="time-btn" data-hour="12">12:00</button>
+                    <button class="time-btn" data-hour="15">15:00</button>
+                    <button class="time-btn" data-hour="18">18:00</button>
+                </div>
+            </div>
+            <div class="reminder-modal-footer">
+                <button class="reminder-confirm-btn" id="remindConfirmBtn">确认</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
