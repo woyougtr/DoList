@@ -893,21 +893,27 @@
             if (!text) return;
             addBtn.disabled = true;
             
-            // 计算提醒时间
+            // 计算提醒时间（用户选择的是北京时间，需要转成UTC存储）
             let remindAt = null;
             if (remindValue !== 'none' && dateValue) {
-                const dueDate = new Date(dateValue);
+                // dateValue 格式是 "2026-03-21T17:00:00"，浏览器会当作本地时间处理
+                // 需要明确加上本地时区偏移再转UTC
+                const localDate = new Date(dateValue);
+                const utcMs = localDate.getTime() - localDate.getTimezoneOffset() * 60 * 1000;
+                
                 if (remindValue === '1hour') {
-                    remindAt = new Date(dueDate.getTime() - 60 * 60 * 1000).toISOString();
+                    remindAt = new Date(utcMs - 60 * 60 * 1000).toISOString();
                 } else if (remindValue === '1day') {
-                    remindAt = new Date(dueDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
+                    remindAt = new Date(utcMs - 24 * 60 * 60 * 1000).toISOString();
                 } else if (remindValue === 'duetime') {
-                    remindAt = dateValue;
+                    remindAt = new Date(utcMs).toISOString();
                 }
             }
             
-            // 存储的 due_date 只取日期部分
-            const dueDateStr = dateValue ? dateValue.split('T')[0] : null;
+            // 存储的 due_date 只取日期部分（北京时间转UTC日期）
+            const localDate2 = new Date(dateValue);
+            const utcMs2 = localDate2.getTime() - localDate2.getTimezoneOffset() * 60 * 1000;
+            const dueDateStr = dateValue ? new Date(utcMs2).toISOString().split('T')[0] : null;
             
             await addTodo(text, categoryValue, priorityValue, dueDateStr, remindAt);
             todoInput.value = '';
