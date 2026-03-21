@@ -98,18 +98,54 @@
         .select-option:hover { background: #f3f4f6; }
         .select-option.selected { background: #f0fdf4; color: var(--primary); font-weight: 600; }
         
-        /* Date Input */
-        .date-input { 
+        /* Date Picker - Custom Style */
+        .date-select { position: relative; }
+        .date-btn { 
+            display: flex; align-items: center; gap: 6px; 
             padding: 10px 14px; 
-            border: 2px solid #f3f4f6; 
+            background: #f3f4f6; 
+            border: 2px solid transparent; 
             border-radius: 12px; 
-            font-size: 14px; 
-            background: #f3f4f6;
-            cursor: pointer; outline: none;
-            transition: all 0.2s;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: all 0.2s;
             color: var(--text);
+            user-select: none;
+            white-space: nowrap;
         }
-        .date-input:focus { border-color: var(--primary); background: #fff; }
+        .date-btn:hover { background: #e5e7eb; }
+        .date-btn .arrow { font-size: 10px; transition: transform 0.2s; }
+        .date-select.open .date-btn { 
+            background: var(--primary); color: #fff; 
+            border-color: var(--primary);
+        }
+        .date-select.open .arrow { transform: rotate(180deg); }
+        .date-dropdown {
+            position: absolute; top: calc(100% + 6px); left: 0;
+            background: #fff; border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 100; padding: 12px;
+            opacity: 0; transform: translateY(-8px);
+            pointer-events: none; transition: all 0.2s;
+            min-width: 280px;
+        }
+        .date-select.open .date-dropdown {
+            opacity: 1; transform: translateY(0);
+            pointer-events: auto;
+        }
+        .date-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .date-nav { width: 32px; height: 32px; border: none; background: #f3f4f6; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .date-nav:hover { background: #e5e7eb; }
+        .date-month-year { font-size: 14px; font-weight: 600; color: var(--text); }
+        .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+        .date-day-header { font-size: 11px; color: var(--text-secondary); font-weight: 500; padding: 6px 0; }
+        .date-day { width: 36px; height: 36px; border: none; background: transparent; border-radius: 50%; cursor: pointer; font-size: 13px; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+        .date-day:hover { background: #f3f4f6; }
+        .date-day.other-month { color: #d1d5db; }
+        .date-day.today { border: 2px solid var(--primary); color: var(--primary); font-weight: 600; }
+        .date-day.selected { background: var(--primary); color: #fff; font-weight: 600; }
+        .date-day.selected:hover { background: var(--primary-dark); }
+        .date-today-btn { width: 100%; padding: 8px; border: none; background: #f3f4f6; border-radius: 8px; font-size: 12px; cursor: pointer; color: var(--text-secondary); margin-top: 8px; transition: all 0.15s; }
+        .date-today-btn:hover { background: #e5e7eb); color: var(--text); }
         
         /* Add Button */
         .btn { padding: 12px 24px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
@@ -286,7 +322,18 @@
                                     <div class="select-option" data-value="urgent">⚡ 紧急</div>
                                 </div>
                             </div>
-                            <input type="date" class="date-input" id="dueDateInput">
+                            <div class="date-select" id="dateSelect">
+                                <div class="date-btn"><span class="date-value">📅 截止日期</span><span class="arrow">▼</span></div>
+                                <div class="date-dropdown" id="dateDropdown">
+                                    <div class="date-header">
+                                        <button class="date-nav" id="datePrev">‹</button>
+                                        <span class="date-month-year" id="dateMonthYear"></span>
+                                        <button class="date-nav" id="dateNext">›</button>
+                                    </div>
+                                    <div class="date-grid" id="dateGrid"></div>
+                                    <button class="date-today-btn" id="dateClear">清除日期</button>
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-primary" id="addBtn">添加</button>
                         </div>
                     </form>
@@ -352,11 +399,15 @@
     <nav class="bottom-nav" id="bottomNav">
         <div class="nav-inner">
             <button class="nav-item active" data-page="todo">
-                <span class="nav-icon">📋</span>
+                <span class="nav-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </span>
                 <span class="nav-label">待办</span>
             </button>
             <button class="nav-item" data-page="my">
-                <span class="nav-icon">👤</span>
+                <span class="nav-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
                 <span class="nav-label">我的</span>
             </button>
         </div>
@@ -444,6 +495,104 @@
         
         initCustomSelect(categorySelect, (val) => { categoryValue = val; });
         initCustomSelect(prioritySelect, (val) => { priorityValue = val; });
+        
+        // Custom Date Picker
+        let dateValue = '';
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        const dateSelect = document.getElementById('dateSelect');
+        const dateBtn = dateSelect.querySelector('.date-btn');
+        const dateDropdown = document.getElementById('dateDropdown');
+        const dateMonthYear = document.getElementById('dateMonthYear');
+        const dateGrid = document.getElementById('dateGrid');
+        const datePrev = document.getElementById('datePrev');
+        const dateNext = document.getElementById('dateNext');
+        const dateClear = document.getElementById('dateClear');
+        
+        function formatDateDisplay(dateStr) {
+            if (!dateStr) return '📅 截止日期';
+            const d = new Date(dateStr);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            if (d.toDateString() === today.toDateString()) return '📅 今天';
+            if (d.toDateString() === tomorrow.toDateString()) return '📅 明天';
+            return '📅 ' + (d.getMonth()+1) + '/' + d.getDate();
+        }
+        
+        function renderDatePicker() {
+            const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            dateMonthYear.textContent = currentYear + ' ' + months[currentMonth];
+            
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+            
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            let html = '<div class="date-day-header">日</div><div class="date-day-header">一</div><div class="date-day-header">二</div><div class="date-day-header">三</div><div class="date-day-header">四</div><div class="date-day-header">五</div><div class="date-day-header">六</div>';
+            
+            // Prev month days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                html += '<button class="date-day other-month" data-day="' + (daysInPrevMonth - i) + '" data-month="prev">' + (daysInPrevMonth - i) + '</button>';
+            }
+            
+            // Current month days
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = currentYear + '-' + String(currentMonth + 1).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+                let cls = 'date-day';
+                if (dateStr === todayStr) cls += ' today';
+                if (dateStr === dateValue) cls += ' selected';
+                html += '<button class="' + cls + '" data-day="' + i + '" data-month="current">' + i + '</button>';
+            }
+            
+            // Next month days
+            const totalCells = firstDay + daysInMonth;
+            const remaining = 42 - totalCells;
+            for (let i = 1; i <= remaining; i++) {
+                html += '<button class="date-day other-month" data-day="' + i + '" data-month="next">' + i + '</button>';
+            }
+            
+            dateGrid.innerHTML = html;
+            
+            // Day click handlers
+            dateGrid.querySelectorAll('.date-day:not(.date-day-header)').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const day = btn.dataset.day;
+                    const monthType = btn.dataset.month;
+                    let month = currentMonth;
+                    let year = currentYear;
+                    if (monthType === 'prev') { month--; if (month < 0) { month = 11; year--; } }
+                    if (monthType === 'next') { month++; if (month > 11) { month = 0; year++; } }
+                    dateValue = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+                    dateBtn.querySelector('.date-value').textContent = formatDateDisplay(dateValue);
+                    dateSelect.classList.remove('open');
+                    renderDatePicker();
+                });
+            });
+        }
+        
+        dateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.custom-select.open, .date-select.open').forEach(s => {
+                if (s !== dateSelect) s.classList.remove('open');
+            });
+            dateSelect.classList.toggle('open');
+        });
+        
+        datePrev.addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderDatePicker(); });
+        dateNext.addEventListener('click', () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderDatePicker(); });
+        
+        dateClear.addEventListener('click', () => {
+            dateValue = '';
+            dateBtn.querySelector('.date-value').textContent = '📅 截止日期';
+            dateSelect.classList.remove('open');
+        });
+        
+        document.addEventListener('click', () => dateSelect.classList.remove('open'));
+        
+        renderDatePicker();
         
         // Bottom Nav
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -668,9 +817,10 @@
             const text = todoInput.value.trim();
             if (!text) return;
             addBtn.disabled = true;
-            await addTodo(text, categoryValue, priorityValue, dueDateInput.value);
+            await addTodo(text, categoryValue, priorityValue, dateValue);
             todoInput.value = '';
-            dueDateInput.value = '';
+            dateValue = '';
+            dateBtn.querySelector('.date-value').textContent = '📅 截止日期';
             addBtn.disabled = false;
         });
         
