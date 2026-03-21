@@ -227,7 +227,7 @@
             border-radius: 8px;
             font-size: 12px;
         }
-        .date-time-row { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; align-items: center; }
+        
         .date-time-label { font-size: 12px; color: var(--text-secondary); }
         .date-time-input { flex: 1; padding: 8px 10px; border: 2px solid #f3f4f6; border-radius: 8px; font-size: 13px; outline: none; background: #f9f9f9; }
         .date-time-input:focus { border-color: var(--primary); background: #fff; }
@@ -453,10 +453,6 @@
                                         <button class="date-nav" id="dateNext">›</button>
                                     </div>
                                     <div class="date-grid" id="dateGrid"></div>
-                                    <div class="date-time-row">
-                                        <span class="date-time-label">时间</span>
-                                        <input type="time" class="date-time-input" id="dateTimeInput" value="20:00">
-                                    </div>
                                     <button class="date-today-btn" id="dateClear">清除日期</button>
                                 </div>
                             </div>
@@ -586,7 +582,6 @@
         const addForm = document.getElementById('addForm');
         const todoInput = document.getElementById('todoInput');
         const dueDateInput = document.getElementById('dueDateInput');
-        const dateTimeInput = document.getElementById('dateTimeInput');
         const todoList = document.getElementById('todoList');
         const totalCount = document.getElementById('totalCount');
         const completedCount = document.getElementById('completedCount');
@@ -694,15 +689,14 @@
         
         function formatDateDisplay(dateStr) {
             if (!dateStr) return '📅 截止日期';
-            const d = new Date(dateStr);
+            const d = new Date(dateStr + 'T12:00:00');
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
-            const timeStr = d.toTimeString().slice(0,5);
-            if (d.toDateString() === today.toDateString()) return '📅 今天 ' + timeStr;
-            if (d.toDateString() === tomorrow.toDateString()) return '📅 明天 ' + timeStr;
+            if (d.toDateString() === today.toDateString()) return '📅 今天';
+            if (d.toDateString() === tomorrow.toDateString()) return '📅 明天';
             const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-            return '📅 ' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + weekdays[d.getDay()] + ' ' + timeStr;
+            return '📅 ' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + weekdays[d.getDay()];
         }
         
         function renderDatePicker() {
@@ -750,8 +744,8 @@
                     let year = currentYear;
                     if (monthType === 'prev') { month--; if (month < 0) { month = 11; year--; } }
                     if (monthType === 'next') { month++; if (month > 11) { month = 0; year++; } }
-                    const timeValue = dateTimeInput.value || '20:00';
-                    dateValue = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0') + 'T' + timeValue + ':00';
+                    const timeValue = '20:00';
+                    dateValue = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0') + ' 20:00:00';
                     dateBtn.querySelector('.date-value').textContent = formatDateDisplay(dateValue);
                     dateSelect.classList.remove('open');
                     renderDatePicker();
