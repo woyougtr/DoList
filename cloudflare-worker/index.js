@@ -132,7 +132,7 @@ export default {
       const nowStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
       
       const todos = await supabaseQuery(
-        `todos?select=id,text,remind_at,notified,completed&remind_at=lte.${nowStr}&notified=eq.false&completed=eq.false`
+        `todos?select=id,text,priority,category,remind_at,notified,completed&remind_at=lte.${nowStr}&notified=eq.false&completed=eq.false`
       );
       
       console.log('查询到的待办数量:', todos ? todos.length : 0);
