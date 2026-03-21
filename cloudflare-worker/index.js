@@ -60,7 +60,7 @@ async function sendServerChanPush(todo) {
   
   // 醒目 Markdown 格式（方案6）
   const title = '⚠️ 待办提醒';
-  const content = `## 📌 「${todo.text}」\n\n---\n\n⏰ **剩余时间**：${timeStr}\n\n📋 **分类**：${categoryName}  \n📌 **优先级**：${priorityLabel}\n\n---\n\n👉 [点击立即处理](https://woyougtr.github.io/DoList/)`;
+  const content = `## 📌 「${todo.text}」<br><br>---<br><br>⏰ **剩余时间**：${timeStr}<br><br>📋 **分类**：${categoryName}  <br>📌 **优先级**：${priorityLabel}<br><br>---<br><br>👉 [点击立即处理](https://woyougtr.github.io/DoList/)`;
   
   try {
     const response = await fetch(`https://sctapi.ftqq.com/${SERVERCHAN_SENDKEY}.send`, {
