@@ -689,14 +689,17 @@
         
         function formatDateDisplay(dateStr) {
             if (!dateStr) return '📅 截止日期';
-            const d = new Date(dateStr + 'T12:00:00');
+            // Extract just the date part (before the space)
+            const datePart = dateStr.split(' ')[0];
+            const parts = datePart.split('-');
+            const d = new Date(parts[0], parts[1]-1, parts[2]);
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             if (d.toDateString() === today.toDateString()) return '📅 今天';
             if (d.toDateString() === tomorrow.toDateString()) return '📅 明天';
-            const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
-            return '📅 ' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + weekdays[d.getDay()];
+            const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            return '📅 ' + months[d.getMonth()] + d.getDate() + '日';
         }
         
         function renderDatePicker() {
