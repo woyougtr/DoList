@@ -889,35 +889,34 @@
             if (!text) return;
             addBtn.disabled = true;
             
-            // 计算提醒时间（用户选择的是北京时间，需要转成UTC存储）
+            // 计算提醒时间（直接存储本地时间字符串，不涉及时区）
             let remindAt = null;
             if (remindValue !== 'none' && dateValue) {
-                // dateValue 格式是 "2026-03-21T17:00:00"
-                // JavaScript 把没有时区的日期字符串当作UTC处理，所以要手动解析为本地时间
                 const [datePart, timePart] = dateValue.split('T');
-                const [year, month, day] = datePart.split('-').map(Number);
-                const [hour, minute, second] = (timePart || '00:00:00').split(':').map(Number);
-                // 用本地时区创建Date（月份要-1因为Date月份是0-11）
-                const localDate = new Date(year, month - 1, day, hour, minute, second || 0);
-                const utcMs = localDate.getTime();
+                const [hour, minute] = (timePart || '00:00').split(':').map(Number);
                 
                 if (remindValue === '1hour') {
-                    remindAt = new Date(utcMs - 60 * 60 * 1000).toISOString();
+                    let remindHour = hour - 1;
+                    let remindMin = minute;
+                    let remindDate = datePart;
+                    if (remindHour < 0) {
+                        remindHour += 24;
+                        const d = new Date(datePart);
+                        d.setDate(d.getDate() - 1);
+                        remindDate = d.toISOString().split('T')[0];
+                    }
+                    remindAt = remindDate + ' ' + String(remindHour).padStart(2,'0') + ':' + String(remindMin).padStart(2,'0') + ':00';
                 } else if (remindValue === '1day') {
-                    remindAt = new Date(utcMs - 24 * 60 * 60 * 1000).toISOString();
+                    const d = new Date(datePart);
+                    d.setDate(d.getDate() - 1);
+                    remindAt = d.toISOString().split('T')[0] + ' ' + timePart;
                 } else if (remindValue === 'duetime') {
-                    remindAt = new Date(utcMs).toISOString();
+                    remindAt = dateValue.replace('T', ' ');
                 }
             }
             
-            // 存储的 due_date 只取日期部分（北京时间转UTC日期）
-            let dueDateStr = null;
-            if (dateValue) {
-                const [datePart, timePart] = dateValue.split('T');
-                const [year, month, day] = datePart.split('-').map(Number);
-                const localDate = new Date(year, month - 1, day, 0, 0, 0);
-                dueDateStr = localDate.toISOString().split('T')[0];
-            }
+            // 存储的 due_date 只取日期部分
+            const dueDateStr = dateValue ? dateValue.split('T')[0] : null;
             
             await addTodo(text, categoryValue, priorityValue, dueDateStr, remindAt);
             todoInput.value = '';
