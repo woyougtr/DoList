@@ -1278,6 +1278,7 @@
         let remindCalMonth = new Date().getMonth();
         let remindSelectedDate = null;
         let remindSelectedHour = 15;
+        let remindSelectedMin = '00';
         
         function openTodoReminder(todoId) {
             currentTodoForRemind = todoId;
@@ -1338,12 +1339,19 @@
             
             document.getElementById('remindCalGrid').innerHTML = html;
             
-            // Update time buttons
-            document.querySelectorAll('.time-btn').forEach(btn => {
+            // Update hour options
+            let hourHtml = '';
+            for (let h = 8; h <= 20; h++) {
+                let cls = 'time-opt';
+                if (h === remindSelectedHour) cls += ' selected';
+                hourHtml += '<button class="' + cls + '" data-hour="' + h + '">' + String(h).padStart(2, '0') + '</button>';
+            }
+            document.getElementById('hourOptions').innerHTML = hourHtml;
+            
+            // Update minute options
+            document.querySelectorAll('#minOptions .time-opt').forEach(btn => {
                 btn.classList.remove('selected');
-                if (parseInt(btn.dataset.hour) === remindSelectedHour) {
-                    btn.classList.add('selected');
-                }
+                if (btn.dataset.min === remindSelectedMin) btn.classList.add('selected');
             });
             
             // Bind events
@@ -1446,20 +1454,25 @@
                     </div>
                     <div class="cal-mini-grid" id="remindCalGrid"></div>
                 </div>
-                <div class="time-grid" id="remindTimeGrid">
-                    <button class="time-btn" data-hour="08">08:00</button>
-                    <button class="time-btn" data-hour="09">09:00</button>
-                    <button class="time-btn" data-hour="10">10:00</button>
-                    <button class="time-btn" data-hour="11">11:00</button>
-                    <button class="time-btn" data-hour="12">12:00</button>
-                    <button class="time-btn" data-hour="13">13:00</button>
-                    <button class="time-btn" data-hour="14">14:00</button>
-                    <button class="time-btn" data-hour="15">15:00</button>
-                    <button class="time-btn" data-hour="16">16:00</button>
-                    <button class="time-btn" data-hour="17">17:00</button>
-                    <button class="time-btn" data-hour="18">18:00</button>
-                    <button class="time-btn" data-hour="19">19:00</button>
-                    <button class="time-btn" data-hour="20">20:00</button>
+                <div class="reminder-time-picker">
+                    <div class="time-column">
+                        <span class="time-label">时</span>
+                        <div class="time-scroll" id="hourScroll">
+                            <div class="time-options" id="hourOptions"></div>
+                        </div>
+                    </div>
+                    <span class="time-sep">:</span>
+                    <div class="time-column">
+                        <span class="time-label">分</span>
+                        <div class="time-scroll">
+                            <div class="time-options" id="minOptions">
+                                <button class="time-opt" data-min="00">00</button>
+                                <button class="time-opt" data-min="15">15</button>
+                                <button class="time-opt" data-min="30">30</button>
+                                <button class="time-opt" data-min="45">45</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="reminder-modal-footer">
