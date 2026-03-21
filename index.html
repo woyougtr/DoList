@@ -747,7 +747,7 @@
             profileEmail.textContent = user.email;
             authContainer.classList.add('hidden');
             appContent.classList.add('show');
-            bottomNav.style.display = '';
+            bottomNav.style.display = 'flex';
             document.querySelector('.nav-item[data-page="todo"]').click();
             showToast('登录成功');
             fetchTodos();
