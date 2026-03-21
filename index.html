@@ -192,6 +192,7 @@
         .tag-normal { background: #f3f4f6; color: #6b7280; }
         .due-date { padding: 4px 10px; border-radius: 20px; background: #f3f4f6; color: var(--text-secondary); font-size: 11px; font-weight: 500; }
         .due-date.overdue { background: #fee2e2; color: #dc2626; }
+        .due-date.remind { background: #dbeafe; color: #1d4ed8; }
         .todo-actions { display: flex; gap: 4px; }
         .action-btn { width: 30px; height: 30px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; }
         .action-btn.delete { background: #fee2e2; color: #dc2626; }
@@ -334,6 +335,15 @@
                                     <button class="date-today-btn" id="dateClear">清除日期</button>
                                 </div>
                             </div>
+                            <div class="custom-select" id="remindSelect">
+                                <div class="select-btn"><span class="select-value">🔔 提醒</span><span class="arrow">▼</span></div>
+                                <div class="select-dropdown">
+                                    <div class="select-option selected" data-value="none">🔔 无</div>
+                                    <div class="select-option" data-value="1hour">🔔 1小时前</div>
+                                    <div class="select-option" data-value="1day">🔔 1天前</div>
+                                    <div class="select-option" data-value="duetime">🔔 到期时</div>
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-primary" id="addBtn">添加</button>
                         </div>
                     </form>
@@ -452,6 +462,8 @@
         const authPassword = document.getElementById('authPassword');
         const categorySelect = document.getElementById('categorySelect');
         const prioritySelect = document.getElementById('prioritySelect');
+        const remindSelect = document.getElementById('remindSelect');
+        let remindValue = 'none';
         
         // Toast
         function showToast(msg) {
@@ -495,6 +507,7 @@
         
         initCustomSelect(categorySelect, (val) => { categoryValue = val; });
         initCustomSelect(prioritySelect, (val) => { priorityValue = val; });
+        initCustomSelect(remindSelect, (val) => { remindValue = val; });
         
         // Custom Date Picker
         let dateValue = '';
@@ -775,11 +788,19 @@
             }
         }
         
-        async function addTodo(text, category, priority, dueDate) {
+        async function addTodo(text, category, priority, dueDate, remindAt) {
             try {
                 const newTodo = await api('/todos', {
                     method: 'POST',
-                    body: JSON.stringify({ user_id: user.id, text, category, priority, due_date: dueDate || null }),
+                    body: JSON.stringify({ 
+                        user_id: user.id, 
+                        text, 
+                        category, 
+                        priority, 
+                        due_date: dueDate || null,
+                        remind_at: remindAt || null,
+                        notified: false
+                    }),
                     headers: { 'Prefer': 'return=representation' }
                 });
                 if (newTodo && newTodo[0]) {
@@ -820,10 +841,28 @@
             const text = todoInput.value.trim();
             if (!text) return;
             addBtn.disabled = true;
-            await addTodo(text, categoryValue, priorityValue, dateValue);
+            
+            // 计算提醒时间
+            let remindAt = null;
+            if (remindValue !== 'none' && dateValue) {
+                const dueDate = new Date(dateValue);
+                if (remindValue === '1hour') {
+                    remindAt = new Date(dueDate.getTime() - 60 * 60 * 1000).toISOString();
+                } else if (remindValue === '1day') {
+                    remindAt = new Date(dueDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
+                } else if (remindValue === 'duetime') {
+                    remindAt = dateValue + 'T00:00:00';
+                }
+            }
+            
+            await addTodo(text, categoryValue, priorityValue, dateValue, remindAt);
             todoInput.value = '';
             dateValue = '';
             dateBtn.querySelector('.date-value').textContent = '📅 截止日期';
+            remindValue = 'none';
+            remindSelect.querySelector('.select-value').textContent = '🔔 提醒';
+            remindSelect.querySelectorAll('.select-option').forEach(o => o.classList.remove('selected'));
+            remindSelect.querySelector('.select-option[data-value="none"]').classList.add('selected');
             addBtn.disabled = false;
         });
         
@@ -878,6 +917,23 @@
                 }
                 const isOverdue = todo.due_date && !todo.completed && new Date(todo.due_date) < new Date(new Date().toDateString());
                 
+                // 提醒时间显示
+                let remindStr = '';
+                if (todo.remind_at && !todo.completed) {
+                    const r = new Date(todo.remind_at);
+                    const now = new Date();
+                    if (r > now) {
+                        const diffMs = r.getTime() - now.getTime();
+                        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        if (diffHours >= 24) remindStr = '🔔 ' + Math.floor(diffHours/24) + '天' + (diffHours%24) + '小时后';
+                        else if (diffHours >= 1) remindStr = '🔔 ' + diffHours + '小时后';
+                        else remindStr = '🔔 ' + diffMins + '分钟后';
+                    } else {
+                        remindStr = '🔔 即将到期';
+                    }
+                }
+                
                 return '<div class="todo-item ' + (todo.completed ? 'completed' : '') + '">' +
                     '<div class="todo-checkbox" onclick="toggleComplete(\'' + todo.id + '\')">' + (todo.completed ? '✓' : '') + '</div>' +
                     '<div class="todo-content">' +
@@ -886,6 +942,7 @@
                     '<span class="tag tag-' + todo.category + '">' + categoryNames[todo.category] + '</span>' +
                     '<span class="tag tag-' + todo.priority + '">' + priorityLabels[todo.priority] + '</span>' +
                     (dueDateStr ? '<span class="due-date ' + (isOverdue ? 'overdue' : '') + '">' + (isOverdue ? '⚠️ ' : '') + dueDateStr + '</span>' : '') +
+                    (remindStr ? '<span class="due-date remind">' + remindStr + '</span>' : '') +
                     '</div></div>' +
                     '<div class="todo-actions"><button class="action-btn delete" onclick="deleteTodo(\'' + todo.id + '\')">🗑️</button></div>' +
                     '</div>';
