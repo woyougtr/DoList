@@ -983,7 +983,9 @@
                 // 提醒时间显示
                 let remindStr = '';
                 if (todo.remind_at && !todo.completed) {
-                    const r = new Date(todo.remind_at);
+                    // 手动解析本地时间字符串，因为 new Date() 会把没有时区的字符串当作 UTC 处理
+                    const remindParts = todo.remind_at.split(/[- :]/);
+                    const r = new Date(remindParts[0], remindParts[1]-1, remindParts[2], remindParts[3], remindParts[4], remindParts[5] || 0);
                     const now = new Date();
                     if (r > now) {
                         const diffMs = r.getTime() - now.getTime();

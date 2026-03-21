@@ -14,16 +14,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// Supabase API 调用
+// Supabase API 调用（带超时）
 async function supabaseQuery(query) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-    }
-  });
-  return response.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    return response.json();
+  } catch (e) {
+    clearTimeout(timeout);
+    console.error('查询异常:', e.message);
+    return [];
+  }
 }
 
 // Supabase 更新
@@ -43,7 +53,9 @@ async function supabaseUpdate(table, id, data) {
 
 // 通过钉钉自定义机器人发送推送
 async function sendDingTalkPush(todo) {
-  const remindAt = new Date(todo.remind_at);
+  // 手动解析本地时间字符串，因为 new Date() 会把没有时区的字符串当作 UTC 处理
+  const remindParts = todo.remind_at.split(/[- :]/);
+  const remindAt = new Date(remindParts[0], remindParts[1]-1, remindParts[2], remindParts[3], remindParts[4], remindParts[5] || 0);
   
   // 计算剩余时间用于消息
   const now = new Date();
@@ -53,7 +65,8 @@ async function sendDingTalkPush(todo) {
   
   let timeStr = '';
   if (diffHours >= 1) timeStr = `${diffHours}小时${diffMins > 0 ? diffMins + '分钟' : ''}`;
-  else timeStr = `${diffMins}分钟`;
+  else if (diffMins > 0) timeStr = `${diffMins}分钟`;
+  else timeStr = '即将到期';
   
   const categoryName = todo.category === 'work' ? '🏢 工作' : todo.category === 'life' ? '🏠 生活' : '📚 学习';
   const priorityLabel = todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通';
@@ -95,16 +108,30 @@ async function sendDingTalkPush(todo) {
 // 主函数
 export default {
   async scheduled(event, env, ctx) {
+    // 获取本地时间（北京时间）
+    const now = new Date();
+    
     console.log('开始检查待办提醒...');
+    console.log('当前时间:', now.toString());
     
     try {
-      // 查询需要提醒的待办（提前1小时内到期，已设置提醒且未通知）
-      const now = new Date();
-      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+      // 查询需要提醒的待办（已到期的提醒时间，已设置提醒且未通知）
+      // remind_at 存的是本地时间格式 "2026-03-21 17:30:00"
+      // 需要把当前时间转成本地时间格式来比较
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hour = String(now.getHours()).padStart(2, '0');
+      const minute = String(now.getMinutes()).padStart(2, '0');
+      const second = String(now.getSeconds()).padStart(2, '0');
+      const nowStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
       
       const todos = await supabaseQuery(
-        `todos?select=*&remind_at=lte.${oneHourLater}&remind_at=gte.${now.toISOString()}&notified=eq.false&completed=eq.false`
+        `todos?select=id,text,remind_at,notified,completed&remind_at=lte.${nowStr}&notified=eq.false&completed=eq.false`
       );
+      
+      console.log('查询到的待办数量:', todos ? todos.length : 0);
+      console.log('查询到的待办:', JSON.stringify(todos));
       
       if (!todos || todos.length === 0) {
         console.log('没有需要提醒的待办');
@@ -127,14 +154,43 @@ export default {
     }
   },
   
-  // HTTP 处理（可选，用于手动触发测试）
+  // HTTP 处理（用于手动触发测试）
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
     
+    const url = new URL(request.url);
+    
+    // 测试 Supabase 连通性
+    if (url.pathname === '/test-supabase') {
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/todos?select=id,text,remind_at,notified,completed&remind_at=not.is.null`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          }
+        });
+        const data = await response.json();
+        return new Response(JSON.stringify({ ok: true, status: response.status, data }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ ok: false, error: e.message }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+    
+    // 测试端点
+    if (url.pathname === '/ping') {
+      return new Response(JSON.stringify({ ok: true, time: new Date().toISOString() }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
     // 手动触发检查
-    if (request.method === 'POST' && new URL(request.url).pathname === '/check') {
+    if (request.method === 'POST' && url.pathname === '/check') {
       await this.scheduled(null, env, null);
       return new Response(JSON.stringify({ success: true, message: '检查完成' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
