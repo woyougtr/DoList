@@ -53,13 +53,14 @@ async function supabaseUpdate(table, id, data) {
 
 // 通过钉钉自定义机器人发送推送
 async function sendDingTalkPush(todo) {
-  // 手动解析本地时间字符串，因为 new Date() 会把没有时区的字符串当作 UTC 处理
+  // 手动解析本地时间字符串
   const remindParts = todo.remind_at.split(/[- :]/);
   const remindAt = new Date(remindParts[0], remindParts[1]-1, remindParts[2], remindParts[3], remindParts[4], remindParts[5] || 0);
   
-  // 计算剩余时间用于消息
-  const now = new Date();
-  const diffMs = remindAt.getTime() - now.getTime();
+  // 计算剩余时间（用北京时间比较）
+  const nowUtc = new Date();
+  const nowBeijing = new Date(nowUtc.getTime() + 8 * 60 * 60 * 1000);
+  const diffMs = remindAt.getTime() - nowBeijing.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
   
@@ -108,22 +109,26 @@ async function sendDingTalkPush(todo) {
 // 主函数
 export default {
   async scheduled(event, env, ctx) {
-    // 获取本地时间（北京时间）
-    const now = new Date();
+    // 获取当前 UTC 时间
+    const nowUtc = new Date();
+    // 转换为北京时间 (UTC+8)
+    const beijingMs = nowUtc.getTime() + 8 * 60 * 60 * 1000;
+    const beijingTime = new Date(beijingMs);
     
     console.log('开始检查待办提醒...');
-    console.log('当前时间:', now.toString());
+    console.log('UTC时间:', nowUtc.toISOString());
+    console.log('北京时间:', beijingTime.toString());
     
     try {
       // 查询需要提醒的待办（已到期的提醒时间，已设置提醒且未通知）
       // remind_at 存的是本地时间格式 "2026-03-21 17:30:00"
-      // 需要把当前时间转成本地时间格式来比较
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hour = String(now.getHours()).padStart(2, '0');
-      const minute = String(now.getMinutes()).padStart(2, '0');
-      const second = String(now.getSeconds()).padStart(2, '0');
+      // 需要把北京时间转成本地时间格式来比较
+      const year = beijingTime.getFullYear();
+      const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
+      const day = String(beijingTime.getDate()).padStart(2, '0');
+      const hour = String(beijingTime.getHours()).padStart(2, '0');
+      const minute = String(beijingTime.getMinutes()).padStart(2, '0');
+      const second = String(beijingTime.getSeconds()).padStart(2, '0');
       const nowStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
       
       const todos = await supabaseQuery(
