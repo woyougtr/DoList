@@ -1,11 +1,11 @@
 // Cloudflare Worker - 待办提醒定时检查
-// 每小时运行一次，检查需要提醒的待办并发送微信通知
+// 每小时运行一次，检查需要提醒的待办并发送钉钉通知
 
 const SUPABASE_URL = 'https://cbsjlqnfwqtbydubcrpj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNic2pscW5md3F0YnlkdWJjcnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTQ4ODUsImV4cCI6MjA4OTU5MDg4NX0.AZZCotXt-EZP3hl1RoW_PUjWPfcnmdbAvYIxtFN7h2Q';
 
-// Server酱 SendKey
-const SERVERCHAN_SENDKEY = 'SCT55397TvpML7TBezgh8rw61OJzlTcsB';
+// 钉钉自定义机器人 Webhook
+const DINGTALK_WEBHOOK = 'https://oapi.dingtalk.com/robot/send?access_token=ba334208c606c506094aa6bb1c214f8f227cc1b72ccee484e5c5369d40ee96d1';
 
 // 添加 CORS 头
 const corsHeaders = {
@@ -41,8 +41,8 @@ async function supabaseUpdate(table, id, data) {
   return response.ok;
 }
 
-// 通过 Server酱 发送推送
-async function sendServerChanPush(todo) {
+// 通过钉钉自定义机器人发送推送
+async function sendDingTalkPush(todo) {
   const remindAt = new Date(todo.remind_at);
   
   // 计算剩余时间用于消息
@@ -58,25 +58,32 @@ async function sendServerChanPush(todo) {
   const categoryName = todo.category === 'work' ? '🏢 工作' : todo.category === 'life' ? '🏠 生活' : '📚 学习';
   const priorityLabel = todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通';
   
-  // 醒目 Markdown 格式（方案6）
-  const title = '⚠️ 待办提醒';
-  const content = `## 📌 「${todo.text}」<br><br>---<br><br>⏰ **剩余时间**：${timeStr}<br><br>📋 **分类**：${categoryName}  <br>📌 **优先级**：${priorityLabel}<br><br>---<br><br>👉 [点击立即处理](https://woyougtr.github.io/DoList/)`;
+  // 钉钉 Markdown 格式，标题包含关键字 DoList待办提醒
+  const title = 'DoList待办提醒';
+  const content = `## 📌 「${todo.text}」\n\n---\n\n⏰ **剩余时间**：${timeStr}\n\n📋 **分类**：${categoryName}  \n📌 **优先级**：${priorityLabel}\n\n---\n\n👉 [点击立即处理](https://woyougtr.github.io/DoList/)`;
   
   try {
-    const response = await fetch(`https://sctapi.ftqq.com/${SERVERCHAN_SENDKEY}.send`, {
+    const response = await fetch(DINGTALK_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: title,
-        desp: content
+        msgtype: 'markdown',
+        markdown: {
+          title: title,
+          text: content
+        },
+        at: {
+          isAtAll: true
+        }
       })
     });
     
-    if (response.ok) {
+    const result = await response.json();
+    if (result.errcode === 0) {
       console.log(`已推送提醒: ${todo.id}`);
       return true;
     } else {
-      console.error(`推送失败: ${response.status}`);
+      console.error(`推送失败: ${result.errmsg}`);
       return false;
     }
   } catch (e) {
@@ -107,7 +114,7 @@ export default {
       console.log(`找到 ${todos.length} 个待办需要提醒`);
       
       for (const todo of todos) {
-        const success = await sendServerChanPush(todo);
+        const success = await sendDingTalkPush(todo);
         if (success) {
           // 标记为已通知
           await supabaseUpdate('todos', todo.id, { notified: true });
