@@ -41,7 +41,7 @@ async function supabaseUpdate(table, id, data) {
   return response.ok;
 }
 
-// 通过 Server酱 发送微信推送
+// 通过 Server酱 发送推送
 async function sendServerChanPush(todo) {
   const remindAt = new Date(todo.remind_at);
   
@@ -55,8 +55,12 @@ async function sendServerChanPush(todo) {
   if (diffHours >= 1) timeStr = `${diffHours}小时${diffMins > 0 ? diffMins + '分钟' : ''}`;
   else timeStr = `${diffMins}分钟`;
   
-  const title = '📋 待办提醒';
-  const content = `「${todo.text}」\n\n⏰ 剩余时间：${timeStr}\n🏷️ 分类：${todo.category === 'work' ? '工作' : todo.category === 'life' ? '生活' : '学习'}\n📌 优先级：${todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通'}`;
+  const categoryName = todo.category === 'work' ? '🏢 工作' : todo.category === 'life' ? '🏠 生活' : '📚 学习';
+  const priorityLabel = todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通';
+  
+  // 醒目 Markdown 格式（方案6）
+  const title = '⚠️ 待办提醒';
+  const content = `## 📌 「${todo.text}」\n\n---\n\n⏰ **剩余时间**：${timeStr}\n\n📋 **分类**：${categoryName}  \n📌 **优先级**：${priorityLabel}\n\n---\n\n👉 [点击立即处理](https://woyougtr.github.io/DoList/)`;
   
   try {
     const response = await fetch(`https://sctapi.ftqq.com/${SERVERCHAN_SENDKEY}.send`, {
@@ -64,8 +68,7 @@ async function sendServerChanPush(todo) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: title,
-        content: content,
-        channel: 'wechat'
+        desp: content
       })
     });
     
