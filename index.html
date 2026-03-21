@@ -517,7 +517,8 @@
             tomorrow.setDate(tomorrow.getDate() + 1);
             if (d.toDateString() === today.toDateString()) return '📅 今天';
             if (d.toDateString() === tomorrow.toDateString()) return '📅 明天';
-            return '📅 ' + (d.getMonth()+1) + '/' + d.getDate();
+            const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+            return '📅 ' + (d.getMonth()+1) + '/' + d.getDate() + ' ' + weekdays[d.getDay()];
         }
         
         function renderDatePicker() {
@@ -581,15 +582,17 @@
             dateSelect.classList.toggle('open');
         });
         
-        datePrev.addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderDatePicker(); });
-        dateNext.addEventListener('click', () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderDatePicker(); });
+        datePrev.addEventListener('click', (e) => { e.stopPropagation(); currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderDatePicker(); });
+        dateNext.addEventListener('click', (e) => { e.stopPropagation(); currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderDatePicker(); });
         
-        dateClear.addEventListener('click', () => {
+        dateClear.addEventListener('click', (e) => {
+            e.stopPropagation();
             dateValue = '';
             dateBtn.querySelector('.date-value').textContent = '📅 截止日期';
             dateSelect.classList.remove('open');
         });
         
+        dateDropdown.addEventListener('click', (e) => e.stopPropagation());
         document.addEventListener('click', () => dateSelect.classList.remove('open'));
         
         renderDatePicker();
