@@ -892,10 +892,14 @@
             // 计算提醒时间（用户选择的是北京时间，需要转成UTC存储）
             let remindAt = null;
             if (remindValue !== 'none' && dateValue) {
-                // dateValue 格式是 "2026-03-21T17:00:00"，浏览器会当作本地时间处理
-                // getTimezoneOffset() 返回负数(UTC+8=-480分钟)，所以+号是减去时区偏差
-                const localDate = new Date(dateValue);
-                const utcMs = localDate.getTime() + localDate.getTimezoneOffset() * 60 * 1000;
+                // dateValue 格式是 "2026-03-21T17:00:00"
+                // JavaScript 把没有时区的日期字符串当作UTC处理，所以要手动解析为本地时间
+                const [datePart, timePart] = dateValue.split('T');
+                const [year, month, day] = datePart.split('-').map(Number);
+                const [hour, minute, second] = (timePart || '00:00:00').split(':').map(Number);
+                // 用本地时区创建Date（月份要-1因为Date月份是0-11）
+                const localDate = new Date(year, month - 1, day, hour, minute, second || 0);
+                const utcMs = localDate.getTime();
                 
                 if (remindValue === '1hour') {
                     remindAt = new Date(utcMs - 60 * 60 * 1000).toISOString();
@@ -907,9 +911,13 @@
             }
             
             // 存储的 due_date 只取日期部分（北京时间转UTC日期）
-            const localDate2 = new Date(dateValue);
-            const utcMs2 = localDate2.getTime() + localDate2.getTimezoneOffset() * 60 * 1000;
-            const dueDateStr = dateValue ? new Date(utcMs2).toISOString().split('T')[0] : null;
+            let dueDateStr = null;
+            if (dateValue) {
+                const [datePart, timePart] = dateValue.split('T');
+                const [year, month, day] = datePart.split('-').map(Number);
+                const localDate = new Date(year, month - 1, day, 0, 0, 0);
+                dueDateStr = localDate.toISOString().split('T')[0];
+            }
             
             await addTodo(text, categoryValue, priorityValue, dueDateStr, remindAt);
             todoInput.value = '';
