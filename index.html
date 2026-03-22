@@ -416,6 +416,8 @@
             max-width: 420px;
             max-height: 90vh;
             overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
             box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
         }
         .reminder-modal-header {
@@ -1349,8 +1351,16 @@
             const confirmBtn = document.getElementById('remindConfirmBtn');
             const modal = document.getElementById('reminderModal');
             
-            closeBtn.onclick = () => modal.classList.remove('show');
-            modal.onclick = (e) => { if (e.target.id === 'reminderModal') modal.classList.remove('show'); };
+            closeBtn.onclick = () => {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            };
+            modal.onclick = (e) => {
+                if (e.target.id === 'reminderModal') {
+                    modal.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            };
             confirmBtn.onclick = async () => {
                 if (!remindSelectedDate) { showToast('请选择日期'); return; }
                 if (currentTodoForRemind) {
@@ -1358,7 +1368,10 @@
                     await updateTodoRemind(currentTodoForRemind, remindAt);
                 }
                 modal.classList.remove('show');
+                document.body.style.overflow = '';
             };
+            
+            document.body.style.overflow = 'hidden';
             
             modal.classList.add('show');
         }
