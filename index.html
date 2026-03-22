@@ -1330,7 +1330,8 @@
             remindCalYear = new Date().getFullYear();
             remindCalMonth = new Date().getMonth();
             remindSelectedDate = null;
-            remindSelectedHour = 15;
+            remindSelectedHour = new Date().getHours();
+            remindSelectedMin = '00';
             
             // Pre-fill from existing remind_at
             if (todo && todo.remind_at) {
@@ -1340,11 +1341,29 @@
                     remindCalMonth = parseInt(parts[1]) - 1;
                     remindSelectedDate = parts[0] + '-' + parts[1] + '-' + parts[2];
                     if (parts[3]) remindSelectedHour = parseInt(parts[3]);
+                    if (parts[4]) remindSelectedMin = parts[4];
                 }
             }
             
             renderRemindCalendar();
-            document.getElementById('reminderModal').classList.add('show');
+            
+            // Bind close/confirm handlers here (modal HTML exists now)
+            const closeBtn = document.getElementById('reminderModalClose');
+            const confirmBtn = document.getElementById('remindConfirmBtn');
+            const modal = document.getElementById('reminderModal');
+            
+            closeBtn.onclick = () => modal.classList.remove('show');
+            modal.onclick = (e) => { if (e.target.id === 'reminderModal') modal.classList.remove('show'); };
+            confirmBtn.onclick = async () => {
+                if (!remindSelectedDate) { showToast('请选择日期'); return; }
+                if (currentTodoForRemind) {
+                    const remindAt = remindSelectedDate + ' ' + String(remindSelectedHour).padStart(2, '0') + ':' + remindSelectedMin + ':00';
+                    await updateTodoRemind(currentTodoForRemind, remindAt);
+                }
+                modal.classList.remove('show');
+            };
+            
+            modal.classList.add('show');
         }
         
         function renderRemindCalendar() {
@@ -1443,30 +1462,6 @@
                 };
             });
         }
-        
-        document.getElementById('reminderModalClose').onclick = () => {
-            document.getElementById('reminderModal').classList.remove('show');
-        };
-        
-        document.getElementById('reminderModal').onclick = (e) => {
-            if (e.target.id === 'reminderModal') {
-                document.getElementById('reminderModal').classList.remove('show');
-            }
-        };
-        
-        document.getElementById('remindConfirmBtn').onclick = async () => {
-            if (!remindSelectedDate) {
-                showToast('请选择日期');
-                return;
-            }
-            
-            if (currentTodoForRemind) {
-                const remindAt = remindSelectedDate + ' ' + String(remindSelectedHour).padStart(2, '0') + ':' + remindSelectedMin + ':00';
-                await updateTodoRemind(currentTodoForRemind, remindAt);
-            }
-            
-            document.getElementById('reminderModal').classList.remove('show');
-        };
         
         async function updateTodoRemind(todoId, remindAt) {
             const token = localStorage.getItem('supabase_token');
