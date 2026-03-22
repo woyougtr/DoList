@@ -1292,12 +1292,15 @@
             if (!currentDetailTodoId) return;
             await deleteTodo(currentDetailTodoId);
             closeDetailModal();
+            showToast('已删除');
         });
         
         document.getElementById('detailComplete').addEventListener('click', async () => {
             if (!currentDetailTodoId) return;
+            const todo = todos.find(t => t.id === currentDetailTodoId);
             await toggleComplete(currentDetailTodoId);
             closeDetailModal();
+            showToast(todo && todo.completed ? '已取消完成' : '已完成 ✓');
             if (currentCategory === 'calendar') renderCalendar();
         });
         
