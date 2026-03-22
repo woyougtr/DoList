@@ -1434,7 +1434,7 @@
             remindSelectedHour = new Date().getHours();
             remindSelectedMin = '00';
             
-            // Pre-fill from existing remind_at
+            // Pre-fill from existing remind_at, fallback to due_date
             if (todo && todo.remind_at) {
                 const parts = todo.remind_at.split(/[- :]/);
                 if (parts.length >= 3) {
@@ -1443,6 +1443,14 @@
                     remindSelectedDate = parts[0] + '-' + parts[1] + '-' + parts[2];
                     if (parts[3]) remindSelectedHour = parseInt(parts[3]);
                     if (parts[4]) remindSelectedMin = parts[4];
+                }
+            } else if (todo && todo.due_date) {
+                // Default to due date if no reminder set yet
+                const parts = todo.due_date.split(/-/);
+                if (parts.length >= 3) {
+                    remindCalYear = parseInt(parts[0]);
+                    remindCalMonth = parseInt(parts[1]) - 1;
+                    remindSelectedDate = todo.due_date;
                 }
             }
             
