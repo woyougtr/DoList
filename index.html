@@ -1423,16 +1423,16 @@
             }
             hourSelect.onchange = () => { remindSelectedHour = parseInt(hourSelect.value); };
             
-            // Update minute select (every 5 mins)
+            // Update minute select (15-min intervals: 00, 15, 30, 45)
             const minSelect = document.getElementById('minSelect');
             minSelect.innerHTML = '';
-            for (let m = 0; m <= 55; m += 5) {
+            [0, 15, 30, 45].forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = String(m).padStart(2, '0');
                 opt.textContent = String(m).padStart(2, '0');
                 if (parseInt(remindSelectedMin) === m) opt.selected = true;
                 minSelect.appendChild(opt);
-            }
+            });
             minSelect.onchange = () => { remindSelectedMin = minSelect.value; };
             
             // Calendar nav handlers
