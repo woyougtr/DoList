@@ -405,35 +405,44 @@
             bottom: 0;
             background: rgba(0,0,0,0.4);
             z-index: 1000;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
         }
         .reminder-modal.show { display: flex; }
         .reminder-modal-content {
             background: #fff;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 320px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
         }
         .reminder-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
+            padding: 18px 20px;
             border-bottom: 1px solid #f0f0f0;
             font-weight: 600;
+            font-size: 16px;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
         }
         .reminder-modal-close {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border: none;
             background: #f3f4f6;
             border-radius: 50%;
             font-size: 18px;
             cursor: pointer;
             color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .reminder-modal-body { padding: 16px 20px; }
         .reminder-date-picker { margin-bottom: 16px; }
@@ -444,15 +453,15 @@
             margin-bottom: 8px;
         }
         .cal-mini-nav {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border: none;
             background: #f3f4f6;
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
         }
-        .cal-mini-month { font-size: 13px; font-weight: 600; }
+        .cal-mini-month { font-size: 14px; font-weight: 600; }
         .cal-mini-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -463,82 +472,70 @@
             border: none;
             background: #f3f4f6;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
         }
         .cal-mini-day:hover { background: #e5e7eb; }
         .cal-mini-day.selected { background: var(--primary); color: #fff; }
         .cal-mini-day.other-month { color: #d1d5db; }
-        .cal-mini-day-header { background: transparent; font-size: 10px; cursor: default; }
+        .cal-mini-day-header { background: transparent; font-size: 11px; cursor: default; }
         .cal-mini-day-header:hover { background: transparent; }
-        .reminder-time-picker {
+        .reminder-time-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             margin: 16px 0;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 14px;
         }
-        .time-col {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+        .reminder-time-select {
+            flex: 1;
+            max-width: 130px;
         }
-        .time-col-label {
+        .reminder-time-select label {
+            display: block;
             font-size: 12px;
             color: var(--text-secondary);
             font-weight: 500;
+            margin-bottom: 6px;
+            text-align: center;
         }
-        .time-col-values {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            max-height: 150px;
-            overflow-y: auto;
-            scrollbar-width: none;
-        }
-        .time-col-values::-webkit-scrollbar { display: none; }
-        .time-opt {
-            padding: 10px 20px;
-            border: 2px solid transparent;
-            background: #fff;
-            border-radius: 10px;
+        .reminder-time-select select {
+            width: 100%;
+            padding: 12px 10px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
             font-size: 18px;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
-            min-width: 60px;
-            text-align: center;
+            background: #f8f9fa;
             color: var(--text);
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            text-align: center;
         }
-        .time-opt:hover {
-            background: #f0fdf4;
+        .reminder-time-select select:focus {
+            outline: none;
             border-color: var(--primary);
-            color: var(--primary);
-        }
-        .time-opt.selected {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
+            background-color: #fff;
         }
         .time-sep {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--text-secondary);
-            margin-top: 20px;
+            margin-top: 18px;
         }
-        .reminder-modal-footer { padding: 12px 20px 16px; }
+        .reminder-modal-footer { padding: 12px 20px 20px; }
         .reminder-confirm-btn {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             background: var(--primary);
             color: #fff;
             border: none;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
         }
@@ -1401,25 +1398,31 @@
             
             document.getElementById('remindCalGrid').innerHTML = html;
             
-            // Update hour options (0-23)
-            let hourHtml = '';
+            // Update hour select
+            const hourSelect = document.getElementById('hourSelect');
+            hourSelect.innerHTML = '';
             for (let h = 0; h <= 23; h++) {
-                let cls = 'time-opt';
-                if (h === remindSelectedHour) cls += ' selected';
-                hourHtml += '<button class="' + cls + '" data-hour="' + h + '">' + String(h).padStart(2, '0') + '</button>';
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = String(h).padStart(2, '0');
+                if (h === remindSelectedHour) opt.selected = true;
+                hourSelect.appendChild(opt);
             }
-            document.getElementById('hourOptions').innerHTML = hourHtml;
+            hourSelect.onchange = () => { remindSelectedHour = parseInt(hourSelect.value); };
             
-            // Update minute options (every 5 mins: 00, 05, 10, ... 55)
-            let minHtml = '';
+            // Update minute select (every 5 mins)
+            const minSelect = document.getElementById('minSelect');
+            minSelect.innerHTML = '';
             for (let m = 0; m <= 55; m += 5) {
-                let cls = 'time-opt';
-                if (m === parseInt(remindSelectedMin)) cls += ' selected';
-                minHtml += '<button class="' + cls + '" data-min="' + String(m).padStart(2, '0') + '">' + String(m).padStart(2, '0') + '</button>';
+                const opt = document.createElement('option');
+                opt.value = String(m).padStart(2, '0');
+                opt.textContent = String(m).padStart(2, '0');
+                if (parseInt(remindSelectedMin) === m) opt.selected = true;
+                minSelect.appendChild(opt);
             }
-            document.getElementById('minOptions').innerHTML = minHtml;
+            minSelect.onchange = () => { remindSelectedMin = minSelect.value; };
             
-            // Bind events
+            // Calendar nav handlers
             document.getElementById('remindCalPrev').onclick = () => {
                 remindCalMonth--;
                 if (remindCalMonth < 0) { remindCalMonth = 11; remindCalYear--; }
@@ -1431,6 +1434,7 @@
                 renderRemindCalendar();
             };
             
+            // Day selection handler
             document.querySelectorAll('.cal-mini-day:not(.cal-mini-day-header)').forEach(btn => {
                 btn.onclick = () => {
                     const day = btn.dataset.day;
@@ -1441,24 +1445,6 @@
                     if (monthType === 'next') { month++; if (month > 11) { month = 0; year++; } }
                     remindSelectedDate = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
                     renderRemindCalendar();
-                };
-            });
-            
-            // Hour selection handler
-            document.querySelectorAll('#hourOptions .time-opt').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('#hourOptions .time-opt').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    remindSelectedHour = parseInt(btn.dataset.hour);
-                };
-            });
-            
-            // Minute selection handler
-            document.querySelectorAll('#minOptions .time-opt').forEach(btn => {
-                btn.onclick = () => {
-                    document.querySelectorAll('#minOptions .time-opt').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    remindSelectedMin = btn.dataset.min;
                 };
             });
         }
@@ -1505,15 +1491,15 @@
                     </div>
                     <div class="cal-mini-grid" id="remindCalGrid"></div>
                 </div>
-                <div class="reminder-time-picker">
-                    <div class="time-col">
-                        <span class="time-col-label">时</span>
-                        <div class="time-col-values" id="hourOptions"></div>
+                <div class="reminder-time-row">
+                    <div class="reminder-time-select">
+                        <label>时</label>
+                        <select id="hourSelect"></select>
                     </div>
                     <span class="time-sep">:</span>
-                    <div class="time-col">
-                        <span class="time-col-label">分</span>
-                        <div class="time-col-values" id="minOptions"></div>
+                    <div class="reminder-time-select">
+                        <label>分</label>
+                        <select id="minSelect"></select>
                     </div>
                 </div>
             </div>
