@@ -214,6 +214,59 @@
         .tab-btn { flex: 1; padding: 10px 8px; border: none; background: transparent; border-radius: 10px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); }
         .tab-btn.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         
+        /* Calendar Page */
+        .calendar-page { padding: 0 4px; }
+        .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; }
+        .cal-nav { width: 36px; height: 36px; border: none; background: #f3f4f6; border-radius: 10px; font-size: 20px; cursor: pointer; color: var(--text); }
+        .cal-nav:hover { background: #e5e7eb; }
+        .cal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+        .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+        .cal-weekdays span { text-align: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); padding: 4px 0; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 500; color: var(--text); background: #f8f9fa; transition: all 0.15s; gap: 2px; padding: 4px; min-height: 52px; }
+        .cal-day:hover { background: #e5e7eb; }
+        .cal-day.other-month { color: #d1d5db; }
+        .cal-day.today { background: #fef3c7; color: #92400e; font-weight: 700; }
+        .cal-day.selected { background: var(--primary); color: #fff; }
+        .cal-day.selected:hover { background: var(--primary-light); }
+        .cal-day-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+        .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary); }
+        .cal-day.selected .cal-dot { background: rgba(255,255,255,0.8); }
+        .cal-day.other-month .cal-dot { background: #d1d5db; }
+        
+        /* Calendar Day Panel */
+        .cal-day-panel { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-radius: 20px 20px 0 0; max-height: 60vh; z-index: 1001; transform: translateY(100%); transition: transform 0.3s ease; box-shadow: 0 -4px 30px rgba(0,0,0,0.12); display: flex; flex-direction: column; }
+        .cal-day-panel.show { transform: translateY(0); }
+        .cal-day-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 12px; border-bottom: 1px solid #f0f0f0; font-weight: 600; font-size: 15px; flex-shrink: 0; }
+        .cal-day-panel-close { width: 32px; height: 32px; border: none; background: #f3f4f6; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cal-day-panel-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+        .cal-day-panel-empty { text-align: center; color: var(--text-secondary); font-size: 14px; padding: 24px 0; }
+        .cal-day-panel-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card-bg); border-radius: 12px; margin-bottom: 8px; cursor: pointer; }
+        .cal-day-panel-item:hover { background: #f0fdf4; }
+        .cal-day-panel-item.completed { opacity: 0.5; }
+        .cal-day-panel-item.completed .cal-day-panel-text { text-decoration: line-through; }
+        .cal-dot-inline { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .cal-day-panel-text { flex: 1; font-size: 14px; }
+        .cal-day-panel-time { font-size: 12px; color: var(--text-secondary); }
+        
+        /* Calendar Overlay */
+        .cal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .cal-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        /* Todo Detail Modal (reused) */
+        .detail-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1002; align-items: center; justify-content: center; }
+        .detail-modal.show { display: flex; }
+        .detail-modal-content { background: #fff; border-radius: 20px; width: 90%; max-width: 360px; padding: 20px; }
+        .detail-modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .detail-modal-title { font-size: 16px; font-weight: 600; flex: 1; padding-right: 12px; }
+        .detail-modal-close { width: 28px; height: 28px; border: none; background: #f3f4f6; border-radius: 50%; font-size: 16px; cursor: pointer; }
+        .detail-modal-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary); }
+        .detail-modal-row span:first-child { font-weight: 500; }
+        .detail-modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .detail-modal-actions button { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .detail-modal-actions .btn-delete { background: #fee2e2; color: #dc2626; }
+        .detail-modal-actions .btn-complete { background: #d1fae5; color: #065f46; }
+        
         /* Todo List */
         .todo-list { list-style: none; }
         .todo-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 16px; margin-bottom: 10px; box-shadow: var(--shadow); transition: all 0.2s; }
@@ -547,12 +600,55 @@
                     <button class="tab-btn" data-category="work">🏢</button>
                     <button class="tab-btn" data-category="life">🏠</button>
                     <button class="tab-btn" data-category="study">📚</button>
+                    <button class="tab-btn" data-category="calendar">📅</button>
                 </div>
                 
                 <div id="todoList">
                     <div class="loading">
                         <div class="spinner"></div>
                         <p>加载中...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 日历页面 -->
+            <div id="calendarPage" class="calendar-page" style="display:none;">
+                <div class="cal-header">
+                    <button class="cal-nav" id="calPrev">‹</button>
+                    <span class="cal-title" id="calTitle"></span>
+                    <button class="cal-nav" id="calNext">›</button>
+                </div>
+                <div class="cal-weekdays">
+                    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                </div>
+                <div class="cal-grid" id="calGrid"></div>
+            </div>
+            
+            <!-- 日历日期面板 -->
+            <div class="cal-overlay" id="calOverlay"></div>
+            <div class="cal-day-panel" id="calDayPanel">
+                <div class="cal-day-panel-header">
+                    <span id="calPanelTitle"></span>
+                    <button class="cal-day-panel-close" id="calPanelClose">×</button>
+                </div>
+                <div class="cal-day-panel-body" id="calPanelBody"></div>
+            </div>
+            
+            <!-- 待办详情弹窗 -->
+            <div class="detail-modal" id="detailModal">
+                <div class="detail-modal-content">
+                    <div class="detail-modal-header">
+                        <div class="detail-modal-title" id="detailTitle"></div>
+                        <button class="detail-modal-close" id="detailClose">×</button>
+                    </div>
+                    <div class="detail-modal-row"><span>分类：</span><span id="detailCategory"></span></div>
+                    <div class="detail-modal-row"><span>优先级：</span><span id="detailPriority"></span></div>
+                    <div class="detail-modal-row"><span>截止日期：</span><span id="detailDue"></span></div>
+                    <div class="detail-modal-row"><span>提醒时间：</span><span id="detailRemind"></span></div>
+                    <div class="detail-modal-row"><span>状态：</span><span id="detailStatus"></span></div>
+                    <div class="detail-modal-actions">
+                        <button class="btn-delete" id="detailDelete">删除</button>
+                        <button class="btn-complete" id="detailComplete">完成</button>
                     </div>
                 </div>
             </div>
@@ -618,6 +714,12 @@
         let categoryValue = 'work';
         let priorityValue = 'normal';
         
+        // Calendar state
+        let calendarYear = new Date().getFullYear();
+        let calendarMonth = new Date().getMonth();
+        let selectedDate = null;
+        let currentDetailTodoId = null;
+        
         // Elements
         const authContainer = document.getElementById('authContainer');
         const appContent = document.getElementById('appContent');
@@ -644,6 +746,16 @@
         const authPassword = document.getElementById('authPassword');
         const categorySelect = document.getElementById('categorySelect');
         const prioritySelect = document.getElementById('prioritySelect');
+        // Calendar elements
+        const calendarPage = document.getElementById('calendarPage');
+        const calTitle = document.getElementById('calTitle');
+        const calGrid = document.getElementById('calGrid');
+        const calDayPanel = document.getElementById('calDayPanel');
+        const calOverlay = document.getElementById('calOverlay');
+        const calPanelTitle = document.getElementById('calPanelTitle');
+        const calPanelBody = document.getElementById('calPanelBody');
+        const detailModal = document.getElementById('detailModal');
+        
         // Toast
         function showToast(msg) {
             toast.textContent = msg;
@@ -959,14 +1071,14 @@
                 const data = await api('/todos?user_id=eq.' + encodeURIComponent(user.id) + '&select=*&order=created_at.desc', {}, token);
                 todos = data || [];
                 saveLocal();
-                render();
+                if (currentCategory === 'calendar') renderCalendar(); else render();
                 setSyncStatus('synced', '已同步');
             } catch (e) {
                 console.error('Fetch error:', e);
                 setSyncStatus('error', '同步失败');
                 const cached = localStorage.getItem('dolist_todos');
                 if (cached) todos = JSON.parse(cached);
-                render();
+                if (currentCategory === 'calendar') renderCalendar(); else render();
             }
         }
         
@@ -988,7 +1100,7 @@
                 if (newTodo && newTodo[0]) {
                     todos.unshift(newTodo[0]);
                     saveLocal();
-                    render();
+                    if (currentCategory === 'calendar') renderCalendar(); else render();
                     showToast('添加成功');
                 }
             } catch (e) { console.error('Add error:', e); showToast('添加失败'); }
@@ -1002,7 +1114,7 @@
                 await api('/todos?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ completed: newCompleted }) });
                 todo.completed = newCompleted;
                 saveLocal();
-                render();
+                if (currentCategory === 'calendar') renderCalendar(); else render();
             } catch (e) { console.error('Toggle error:', e); showToast('更新失败'); }
         }
         
@@ -1011,12 +1123,165 @@
                 await api('/todos?id=eq.' + id, { method: 'DELETE' });
                 todos = todos.filter(t => t.id !== id);
                 saveLocal();
-                render();
+                if (currentCategory === 'calendar') renderCalendar(); else render();
                 showToast('已删除');
             } catch (e) { console.error('Delete error:', e); showToast('删除失败'); }
         }
         
         function saveLocal() { localStorage.setItem('dolist_todos', JSON.stringify(todos)); }
+        
+        // ===== Calendar Functions =====
+        function renderCalendar() {
+            const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+            const today = new Date();
+            const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+            
+            calTitle.textContent = calendarYear + '年' + months[calendarMonth];
+            
+            // Build map of dates with todos
+            const dateMap = {};
+            todos.forEach(t => {
+                if (t.due_date) {
+                    if (!dateMap[t.due_date]) dateMap[t.due_date] = 0;
+                    if (!t.completed) dateMap[t.due_date]++;
+                }
+            });
+            
+            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(calendarYear, calendarMonth, 0).getDate();
+            
+            let html = '';
+            // Prev month days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = prevMonthDays - i;
+                html += '<div class="cal-day other-month"><span>' + day + '</span><div class="cal-day-dots"></div></div>';
+            }
+            // Current month days
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = calendarYear + '-' + String(calendarMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                const isToday = dateStr === todayStr;
+                const isSelected = dateStr === selectedDate;
+                let cls = 'cal-day';
+                if (isToday) cls += ' today';
+                if (isSelected) cls += ' selected';
+                const dots = dateMap[dateStr] || 0;
+                let dotsHtml = '';
+                for (let i = 0; i < Math.min(dots, 3); i++) {
+                    dotsHtml += '<div class="cal-dot"></div>';
+                }
+                html += '<div class="' + cls + '" data-date="' + dateStr + '"><span>' + d + '</span><div class="cal-day-dots">' + dotsHtml + '</div></div>';
+            }
+            // Next month days
+            const totalCells = firstDay + daysInMonth;
+            const remaining = 42 - totalCells;
+            for (let d = 1; d <= remaining; d++) {
+                html += '<div class="cal-day other-month"><span>' + d + '</span><div class="cal-day-dots"></div></div>';
+            }
+            
+            calGrid.innerHTML = html;
+            
+            // Bind day clicks
+            calGrid.querySelectorAll('.cal-day:not(.other-month)').forEach(el => {
+                el.addEventListener('click', () => {
+                    selectedDate = el.dataset.date;
+                    renderCalendar();
+                    openCalDayPanel(selectedDate);
+                });
+            });
+        }
+        
+        function openCalDayPanel(dateStr) {
+            // Format title: 3月22日
+            const [y, m, d] = dateStr.split('-');
+            calPanelTitle.textContent = parseInt(m) + '月' + parseInt(d) + '日';
+            
+            // Find todos for this date
+            const dayTodos = todos.filter(t => t.due_date === dateStr);
+            
+            if (dayTodos.length === 0) {
+                calPanelBody.innerHTML = '<div class="cal-day-panel-empty">这天没有待办</div>';
+            } else {
+                const categoryNames = { work: '🏢 工作', life: '🏠 生活', study: '📚 学习' };
+                const categoryColors = { work: '#3b82f6', life: '#ec4899', study: '#f59e0b' };
+                calPanelBody.innerHTML = dayTodos.map(t => {
+                    const color = categoryColors[t.category] || '#6b7280';
+                    return '<div class="cal-day-panel-item' + (t.completed ? ' completed' : '') + '" onclick="showTodoDetail(\'' + t.id + '\')">' +
+                        '<div class="cal-dot-inline" style="background:' + color + '"></div>' +
+                        '<div class="cal-day-panel-text">' + t.text + '</div>' +
+                        '</div>';
+                }).join('');
+            }
+            
+            calOverlay.classList.add('show');
+            calDayPanel.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCalDayPanel() {
+            calOverlay.classList.remove('show');
+            calDayPanel.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        function showTodoDetail(todoId) {
+            closeCalDayPanel();
+            const todo = todos.find(t => t.id === todoId);
+            if (!todo) return;
+            currentDetailTodoId = todoId;
+            
+            const categoryNames = { work: '🏢 工作', life: '🏠 生活', study: '📚 学习' };
+            const priorityLabels = { normal: '○ 普通', urgent: '⚡ 紧急' };
+            
+            document.getElementById('detailTitle').textContent = todo.text;
+            document.getElementById('detailCategory').textContent = categoryNames[todo.category] || todo.category;
+            document.getElementById('detailPriority').textContent = priorityLabels[todo.priority] || todo.priority;
+            document.getElementById('detailDue').textContent = todo.due_date ? todo.due_date.replace(/-/g, '年').replace(/(\d+)年(\d+)年(\d+)年/, '$1年$2月$3日') : '未设置';
+            document.getElementById('detailRemind').textContent = todo.remind_at ? todo.remind_at.replace(/-/g, '/').slice(0, 16) : '未设置';
+            document.getElementById('detailStatus').textContent = todo.completed ? '已完成 ✓' : '进行中';
+            document.getElementById('detailComplete').textContent = todo.completed ? '取消完成' : '标记完成';
+            
+            detailModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeDetailModal() {
+            detailModal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        
+        // Calendar nav
+        document.getElementById('calPrev').addEventListener('click', () => {
+            calendarMonth--;
+            if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+            renderCalendar();
+        });
+        document.getElementById('calNext').addEventListener('click', () => {
+            calendarMonth++;
+            if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+            renderCalendar();
+        });
+        
+        // Calendar panel close
+        document.getElementById('calPanelClose').addEventListener('click', closeCalDayPanel);
+        calOverlay.addEventListener('click', closeCalDayPanel);
+        
+        // Detail modal
+        document.getElementById('detailClose').addEventListener('click', closeDetailModal);
+        detailModal.addEventListener('click', (e) => { if (e.target === detailModal) closeDetailModal(); });
+        
+        document.getElementById('detailDelete').addEventListener('click', async () => {
+            if (!currentDetailTodoId) return;
+            await deleteTodo(currentDetailTodoId);
+            closeDetailModal();
+        });
+        
+        document.getElementById('detailComplete').addEventListener('click', async () => {
+            if (!currentDetailTodoId) return;
+            await toggleComplete(currentDetailTodoId);
+            closeDetailModal();
+            if (currentCategory === 'calendar') renderCalendar();
+        });
         
         addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1048,7 +1313,17 @@
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentCategory = btn.dataset.category;
-                render();
+                
+                // Show/hide calendar vs todo list
+                if (currentCategory === 'calendar') {
+                    todoPage.style.display = 'none';
+                    calendarPage.style.display = 'block';
+                    renderCalendar();
+                } else {
+                    todoPage.style.display = '';
+                    calendarPage.style.display = 'none';
+                    render();
+                }
             });
         });
         
@@ -1292,7 +1567,7 @@
                     todo.remind_at = remindAt;
                     todo.notified = false;
                 }
-                render();
+                if (currentCategory === 'calendar') renderCalendar(); else render();
                 showToast('提醒已设置');
             }
         }
