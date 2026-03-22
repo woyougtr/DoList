@@ -57,24 +57,19 @@ async function sendDingTalkPush(todo) {
   const remindParts = todo.remind_at.split(/[- :]/);
   const remindAt = new Date(remindParts[0], remindParts[1]-1, remindParts[2], remindParts[3], remindParts[4], remindParts[5] || 0);
   
-  // 计算剩余时间（用北京时间比较）
-  const nowUtc = new Date();
-  const nowBeijing = new Date(nowUtc.getTime() + 8 * 60 * 60 * 1000);
-  const diffMs = remindAt.getTime() - nowBeijing.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
-  let timeStr = '';
-  if (diffHours >= 1) timeStr = `${diffHours}小时${diffMins > 0 ? diffMins + '分钟' : ''}`;
-  else if (diffMins > 0) timeStr = `${diffMins}分钟`;
-  else timeStr = '即将到期';
-  
   const categoryName = todo.category === 'work' ? '🏢 工作' : todo.category === 'life' ? '🏠 生活' : '📚 学习';
   const priorityLabel = todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通';
   
+  // 格式化提醒时间
+  const remindMonth = remindParts[1];
+  const remindDay = remindParts[2];
+  const remindHour = String(remindParts[3]).padStart(2, '0');
+  const remindMin = String(remindParts[4]).padStart(2, '0');
+  const dateStr = `${remindMonth}月${remindDay}日 ${remindHour}:${remindMin}`;
+  
   // 钉钉 Markdown 格式，标题包含关键字 DoList待办提醒
   const title = 'DoList待办提醒';
-  const content = `## 📌 「${todo.text}」\n\n---\n\n⏰ **剩余时间**：${timeStr}\n\n📋 **分类**：${categoryName}  \n📌 **优先级**：${priorityLabel}\n\n---\n\n👉 [点击立即处理](https://woyougtr.github.io/DoList/)`;
+  const content = `## 📌 「${todo.text}」\n\n---\n\n📅 **截止日期**：${dateStr}\n\n📋 **分类**：${categoryName}  \n📌 **优先级**：${priorityLabel}`;
   
   try {
     const response = await fetch(DINGTALK_WEBHOOK, {
