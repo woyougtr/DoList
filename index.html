@@ -1312,8 +1312,8 @@
             if (!text) return;
             addBtn.disabled = true;
             
-            // 存储的 due_date 只取日期部分
-            const dueDateStr = dateValue ? dateValue.split('T')[0] : null;
+            // 存储的 due_date 只取日期部分，默认今天
+            const dueDateStr = dateValue ? dateValue.split('T')[0] : new Date().toISOString().split('T')[0];
             
             await addTodo(text, categoryValue, priorityValue, dueDateStr, null);
             todoInput.value = '';
