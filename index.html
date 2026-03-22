@@ -1300,7 +1300,7 @@
             const todo = todos.find(t => t.id === currentDetailTodoId);
             await toggleComplete(currentDetailTodoId);
             closeDetailModal();
-            showToast(todo && todo.completed ? '已取消完成' : '已完成 ✓');
+            showToast(todo && !todo.completed ? '已取消完成' : '已完成 ✓');
             if (currentCategory === 'calendar') renderCalendar();
         });
         
