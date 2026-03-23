@@ -274,6 +274,25 @@
         .detail-modal-actions .btn-delete { background: #fee2e2; color: #dc2626; }
         .detail-modal-actions .btn-complete { background: #d1fae5; color: #065f46; }
         
+        /* Settings Modal */
+        .settings-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1003; align-items: center; justify-content: center; }
+        .settings-modal.show { display: flex; }
+        .settings-modal-content { background: #fff; border-radius: 20px; width: 90%; max-width: 400px; padding: 24px; }
+        .settings-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .settings-modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+        .settings-modal-close { width: 28px; height: 28px; border: none; background: #f3f4f6; border-radius: 50%; font-size: 16px; cursor: pointer; }
+        .settings-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item-icon { font-size: 20px; }
+        .settings-item-text { flex: 1; }
+        .settings-item-label { font-size: 15px; font-weight: 500; color: var(--text); }
+        .settings-item-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .settings-input { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s; margin-top: 8px; }
+        .settings-input:focus { border-color: var(--primary); background: #f0fdf4; }
+        .settings-save-btn { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 16px; transition: all 0.2s; }
+        .settings-save-btn:hover { background: var(--primary-light); }
+        .settings-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
         /* Todo List */
         .todo-list { list-style: none; }
         .todo-item { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: var(--card-bg); border-radius: 16px; margin-bottom: 10px; box-shadow: var(--shadow); transition: all 0.2s; }
@@ -656,6 +675,26 @@
                         <button class="btn-delete" id="detailDelete">删除</button>
                         <button class="btn-complete" id="detailComplete">完成</button>
                     </div>
+                </div>
+            </div>
+            
+            <!-- 设置弹窗 -->
+            <div class="settings-modal" id="settingsModal">
+                <div class="settings-modal-content">
+                    <div class="settings-modal-header">
+                        <div class="settings-modal-title">设置</div>
+                        <button class="settings-modal-close" id="settingsClose">×</button>
+                    </div>
+                    
+                    <div class="settings-item">
+                        <span class="settings-item-icon">🔔</span>
+                        <div class="settings-item-text">
+                            <div class="settings-item-label">钉钉推送</div>
+                            <div class="settings-item-desc">接收待办提醒通知</div>
+                        </div>
+                    </div>
+                    <input type="text" class="settings-input" id="webhookInput" placeholder="粘贴钉钉机器人Webhook地址" />
+                    <button class="settings-save-btn" id="saveWebhookBtn">保存</button>
                 </div>
             </div>
             
@@ -1049,6 +1088,84 @@
             clearEmail.classList.remove('show'); clearPassword.classList.remove('show');
             showToast('已退出登录');
         });
+        
+        // Settings modal elements
+        const settingsModal = document.getElementById('settingsModal');
+        const settingsClose = document.getElementById('settingsClose');
+        const webhookInput = document.getElementById('webhookInput');
+        const saveWebhookBtn = document.getElementById('saveWebhookBtn');
+        
+        // Load user's webhook from Supabase
+        async function loadWebhook() {
+            if (!user) return;
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id + '?select=dingtalk_webhook', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                const data = await res.json();
+                if (data && data.length > 0 && data[0].dingtalk_webhook) {
+                    webhookInput.value = data[0].dingtalk_webhook;
+                } else {
+                    webhookInput.value = '';
+                }
+            } catch (e) {
+                console.error('加载webhook失败:', e);
+            }
+        }
+        
+        // Save webhook to Supabase
+        async function saveWebhook() {
+            if (!user) return;
+            const webhook = webhookInput.value.trim();
+            saveWebhookBtn.disabled = true;
+            saveWebhookBtn.textContent = '保存中...';
+            try {
+                // Check if profile exists
+                const checkRes = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id + '?select=id', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                const checkData = await checkRes.json();
+                
+                if (checkData && checkData.length > 0) {
+                    // Update existing profile
+                    await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id, {
+                        method: 'PATCH',
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                        body: JSON.stringify({ dingtalk_webhook: webhook })
+                    });
+                } else {
+                    // Create new profile
+                    await fetch(SUPABASE_URL + '/rest/v1/profiles', {
+                        method: 'POST',
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                        body: JSON.stringify({ id: user.id, dingtalk_webhook: webhook })
+                    });
+                }
+                showToast(webhook ? '钉钉推送已保存' : '已清除钉钉推送');
+                settingsModal.classList.remove('show');
+            } catch (e) {
+                console.error('保存webhook失败:', e);
+                showToast('保存失败');
+            }
+            saveWebhookBtn.disabled = false;
+            saveWebhookBtn.textContent = '保存';
+        }
+        
+        // Settings menu click handler
+        document.querySelectorAll('.menu-item').forEach(item => {
+            const text = item.querySelector('.menu-text')?.textContent;
+            if (text === '设置') {
+                item.addEventListener('click', () => {
+                    if (!user) { showToast('请先登录'); return; }
+                    loadWebhook();
+                    settingsModal.classList.add('show');
+                });
+            }
+        });
+        
+        settingsClose.addEventListener('click', () => settingsModal.classList.remove('show'));
+        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) settingsModal.classList.remove('show'); });
+        saveWebhookBtn.addEventListener('click', saveWebhook);
         
         // Auto login
         async function init() {
@@ -1581,6 +1698,20 @@
         }
         
         async function updateTodoRemind(todoId, remindAt) {
+            // Check if user has webhook configured
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id + '?select=dingtalk_webhook', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                const data = await res.json();
+                if (!data || data.length === 0 || !data[0].dingtalk_webhook || data[0].dingtalk_webhook.trim() === '') {
+                    showToast('请先在设置中配置钉钉推送');
+                    return;
+                }
+            } catch (e) {
+                console.error('检查webhook失败:', e);
+            }
+            
             const token = localStorage.getItem('supabase_token');
             const res = await fetch(API + '/rest/v1/todos?id=eq.' + todoId, {
                 method: 'PATCH',

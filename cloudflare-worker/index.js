@@ -4,9 +4,6 @@
 const SUPABASE_URL = 'https://cbsjlqnfwqtbydubcrpj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNic2pscW5md3F0YnlkdWJjcnBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTQ4ODUsImV4cCI6MjA4OTU5MDg4NX0.AZZCotXt-EZP3hl1RoW_PUjWPfcnmdbAvYIxtFN7h2Q';
 
-// 钉钉自定义机器人 Webhook
-const DINGTALK_WEBHOOK = 'https://oapi.dingtalk.com/robot/send?access_token=ba334208c606c506094aa6bb1c214f8f227cc1b72ccee484e5c5369d40ee96d1';
-
 // 添加 CORS 头
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,12 +48,58 @@ async function supabaseUpdate(table, id, data) {
   return response.ok;
 }
 
+// Supabase 插入
+async function supabaseInsert(table, data) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(data)
+  });
+  return response.ok;
+}
+
+// 获取用户 profile（包含钉钉 webhook）
+async function getUserProfile(userId) {
+  const profiles = await supabaseQuery(`profiles?id=eq.${userId}&select=dingtalk_webhook`);
+  if (profiles && profiles.length > 0) {
+    return profiles[0];
+  }
+  return null;
+}
+
+// 确保用户有 profile 记录
+async function ensureUserProfile(userId) {
+  const profiles = await supabaseQuery(`profiles?id=eq.${userId}&select=id`);
+  if (!profiles || profiles.length === 0) {
+    await supabaseInsert('profiles', { id: userId, dingtalk_webhook: null });
+  }
+}
+
+// 获取或创建用户 profile
+async function getOrCreateProfile(userId) {
+  let profiles = await supabaseQuery(`profiles?id=eq.${userId}&select=dingtalk_webhook`);
+  if (!profiles || profiles.length === 0) {
+    await supabaseInsert('profiles', { id: userId, dingtalk_webhook: null });
+    profiles = [{ dingtalk_webhook: null }];
+  }
+  return profiles[0];
+}
+
 // 通过钉钉自定义机器人发送推送
-async function sendDingTalkPush(todo) {
+async function sendDingTalkPush(todo, webhook) {
+  // 如果用户没有设置 webhook，跳过
+  if (!webhook || webhook.trim() === '') {
+    console.log(`用户 ${todo.user_id} 未设置钉钉 webhook，跳过推送`);
+    return true; // 返回 true 表示已处理（不重试）
+  }
+  
   // 手动解析本地时间字符串
   const remindParts = todo.remind_at.split(/[- :]/);
-  const remindAt = new Date(remindParts[0], remindParts[1]-1, remindParts[2], remindParts[3], remindParts[4], remindParts[5] || 0);
-  
   const categoryName = todo.category === 'work' ? '🏢 工作' : todo.category === 'life' ? '🏠 生活' : '📚 学习';
   const priorityLabel = todo.priority === 'urgent' ? '⚡ 紧急' : '○ 普通';
   
@@ -72,7 +115,7 @@ async function sendDingTalkPush(todo) {
   const content = `## 📌 「${todo.text}」\n\n---\n\n📅 **截止日期**：${dateStr}\n\n📋 **分类**：${categoryName}  \n📌 **优先级**：${priorityLabel}`;
   
   try {
-    const response = await fetch(DINGTALK_WEBHOOK, {
+    const response = await fetch(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -82,14 +125,14 @@ async function sendDingTalkPush(todo) {
           text: content
         },
         at: {
-          isAtAll: true
+          isAtAll: false
         }
       })
     });
     
     const result = await response.json();
     if (result.errcode === 0) {
-      console.log(`已推送提醒: ${todo.id}`);
+      console.log(`已推送提醒给用户 ${todo.user_id}: ${todo.id}`);
       return true;
     } else {
       console.error(`推送失败: ${result.errmsg}`);
@@ -115,9 +158,7 @@ export default {
     console.log('北京时间:', beijingTime.toString());
     
     try {
-      // 查询需要提醒的待办（已到期的提醒时间，已设置提醒且未通知）
-      // remind_at 存的是本地时间格式 "2026-03-21 17:30:00"
-      // 需要把北京时间转成本地时间格式来比较
+      // 查询需要提醒的待办（包含 user_id 用于查找各自的 webhook）
       const year = beijingTime.getFullYear();
       const month = String(beijingTime.getMonth() + 1).padStart(2, '0');
       const day = String(beijingTime.getDate()).padStart(2, '0');
@@ -127,11 +168,10 @@ export default {
       const nowStr = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
       
       const todos = await supabaseQuery(
-        `todos?select=id,text,priority,category,remind_at,notified,completed&remind_at=lte.${nowStr}&notified=eq.false&completed=eq.false`
+        `todos?select=id,text,priority,category,remind_at,notified,completed,user_id&remind_at=lte.${nowStr}&notified=eq.false&completed=eq.false`
       );
       
       console.log('查询到的待办数量:', todos ? todos.length : 0);
-      console.log('查询到的待办:', JSON.stringify(todos));
       
       if (!todos || todos.length === 0) {
         console.log('没有需要提醒的待办');
@@ -141,7 +181,11 @@ export default {
       console.log(`找到 ${todos.length} 个待办需要提醒`);
       
       for (const todo of todos) {
-        const success = await sendDingTalkPush(todo);
+        // 获取用户的 profile（包含 webhook）
+        const profile = await getOrCreateProfile(todo.user_id);
+        const webhook = profile ? profile.dingtalk_webhook : null;
+        
+        const success = await sendDingTalkPush(todo, webhook);
         if (success) {
           // 标记为已通知
           await supabaseUpdate('todos', todo.id, { notified: true });
@@ -154,7 +198,7 @@ export default {
     }
   },
   
-  // HTTP 处理（用于手动触发测试）
+  // HTTP 处理
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
@@ -162,10 +206,15 @@ export default {
     
     const url = new URL(request.url);
     
+    // 获取当前 UTC 时间
+    const nowUtc = new Date();
+    const beijingMs = nowUtc.getTime() + 8 * 60 * 60 * 1000;
+    const beijingTime = new Date(beijingMs);
+    
     // 测试 Supabase 连通性
     if (url.pathname === '/test-supabase') {
       try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/todos?select=id,text,remind_at,notified,completed&remind_at=not.is.null`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/todos?select=id,text,remind_at,notified,completed,user_id&remind_at=not.is.null`, {
           headers: {
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -184,7 +233,7 @@ export default {
     
     // 测试端点
     if (url.pathname === '/ping') {
-      return new Response(JSON.stringify({ ok: true, time: new Date().toISOString() }), {
+      return new Response(JSON.stringify({ ok: true, time: beijingTime.toString() }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
