@@ -1710,6 +1710,8 @@
                 }
             } catch (e) {
                 console.error('检查webhook失败:', e);
+                showToast('请先在设置中配置钉钉推送');
+                return;
             }
             
             const token = localStorage.getItem('supabase_token');
