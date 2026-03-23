@@ -1099,7 +1099,7 @@
         async function loadWebhook() {
             if (!user) return;
             try {
-                const res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '?select=dingtalk_webhook', {
+                const res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '&select=dingtalk_webhook', {
                     headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
                 });
                 const data = await res.json();
@@ -1120,22 +1120,15 @@
             saveWebhookBtn.disabled = true;
             saveWebhookBtn.textContent = '保存中...';
             try {
-                // Check if profile exists
-                const checkRes = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '?select=id', {
-                    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+                // 直接尝试更新（PATCH）
+                let res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id, {
+                    method: 'PATCH',
+                    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ dingtalk_webhook: webhook })
                 });
-                const checkData = await checkRes.json();
                 
-                let res;
-                if (checkData && checkData.length > 0) {
-                    // Update existing profile
-                    res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id, {
-                        method: 'PATCH',
-                        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                        body: JSON.stringify({ dingtalk_webhook: webhook })
-                    });
-                } else {
-                    // Create new profile
+                // 如果 PATCH 返回 404，说明记录不存在，尝试插入
+                if (res.status === 404 || res.status === 200 && await res.text() === '') {
                     res = await fetch(API + '/rest/v1/profiles', {
                         method: 'POST',
                         headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -1562,7 +1555,7 @@
         async function openTodoReminder(todoId) {
             // Check if user has webhook configured
             try {
-                const res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '?select=dingtalk_webhook', {
+                const res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '&select=dingtalk_webhook', {
                     headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
                 });
                 const data = await res.json();
@@ -1727,7 +1720,7 @@
         async function updateTodoRemind(todoId, remindAt) {
             // Check if user has webhook configured
             try {
-                const res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '?select=dingtalk_webhook', {
+                const res = await fetch(API + '/rest/v1/profiles?id=eq.' + user.id + '&select=dingtalk_webhook', {
                     headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
                 });
                 const data = await res.json();
