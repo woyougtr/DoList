@@ -1548,7 +1548,23 @@
         let remindSelectedHour = 15;
         let remindSelectedMin = '00';
         
-        function openTodoReminder(todoId) {
+        async function openTodoReminder(todoId) {
+            // Check if user has webhook configured
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + user.id + '?select=dingtalk_webhook', {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+                });
+                const data = await res.json();
+                if (!data || data.length === 0 || !data[0].dingtalk_webhook || data[0].dingtalk_webhook.trim() === '') {
+                    showToast('请先在设置中配置钉钉推送');
+                    return;
+                }
+            } catch (e) {
+                console.error('检查webhook失败:', e);
+                showToast('请先在设置中配置钉钉推送');
+                return;
+            }
+            
             currentTodoForRemind = todoId;
             const todo = todos.find(t => t.id === todoId);
             // Reset to current month
